@@ -1,8 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from datetime import datetime
-from excel_service import create_excel_file
-from pdf_service import create_pdf
+from services import excel_service as xlsx, pdf_service as pdf
 
 # Función para manejar el evento de envío del formulario
 def submit_form():
@@ -27,10 +26,10 @@ def submit_form():
     }
 
     # Guardar los datos en un archivo Excel
-    create_excel_file(data)
+    xlsx.create_excel_file(data)
 
     # Crear un archivo PDF con los datos del formulario
-    create_pdf(data)
+    pdf.create_pdf(data)
 
     # Mostrar un mensaje de éxito
     messagebox.showinfo("Éxito", "El formulario ha sido enviado correctamente.")
