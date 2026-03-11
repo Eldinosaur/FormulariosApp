@@ -8,6 +8,7 @@ FILE_PATH = 'data/data.xlsx'
 def create_excel_file(data):
     # Verificar si el archivo ya existe, si no, crear uno nuevo
     if not os.path.exists(FILE_PATH):
+        os.makedirs('data', exist_ok=True)  # Crear la carpeta 'data' si no existe
         # Crear un nuevo libro de trabajo
         workbook = Workbook()
         worksheet = workbook.active
