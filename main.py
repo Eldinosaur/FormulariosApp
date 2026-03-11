@@ -9,6 +9,7 @@ def submit_form():
     id = id_entry.get()
     name = name_entry.get()
     email = email_entry.get()
+    photo = photo_entry.get()
     
     # Validar que los campos no estén vacíos
     if not id or not name or not email:
@@ -22,7 +23,8 @@ def submit_form():
         'id': id,
         'name': name,
         'email': email,
-        'date': date
+        'date': date,
+        'photo': photo
     }
 
     # Guardar los datos en un archivo Excel
@@ -38,6 +40,7 @@ def submit_form():
     id_entry.delete(0, tk.END)
     name_entry.delete(0, tk.END)
     email_entry.delete(0, tk.END)
+    photo_entry.delete(0, tk.END)
     
 # Crear la ventana principal
 root = tk.Tk()
@@ -58,6 +61,11 @@ email_label = tk.Label(root, text="Email:")
 email_label.pack()
 email_entry = tk.Entry(root)
 email_entry.pack()
+
+photo_label = tk.Label(root, text="Foto:")
+photo_label.pack()
+photo_entry = tk.Entry(root)
+photo_entry.pack()
 
 # Crear un botón para enviar el formulario
 submit_button = tk.Button(root, text="Enviar", command=submit_form)
