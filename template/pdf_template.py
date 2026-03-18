@@ -821,18 +821,103 @@ def laboral(pdf,data):
 
     section_title(pdf, "6. SITUACIÓN LABORAL")
 
-    pdf.cell(190, 6, "Funciones actuales", border=1, ln=True)
-    box(pdf, data.get("functions", ""), 25)
-
-    pdf.cell(190, 6, "Plan de vida", border=1, ln=True)
-    box(pdf, data.get("life_plan", ""), 25)
-
-
-def observaciones(pdf, data):
-
-    section_title(pdf, "OBSERVACIONES")
-    box(pdf, data.get("observations", ""), 30)
-
+    table_row_mixed(pdf, [190], [
+       "Antes de ingresar a Comercial Yolanda Salazar  a que se dedicaba (tiempo):"
+   ],["B"])
+    table_row_mixed(pdf, [190], [
+        f"{data.get("previous_occupation", "")}"
+    ],[""])
+    table_row_mixed(pdf, [190], [
+        "Funciones que desempeña actualmente:"
+    ],["B"])
+    table_row_mixed(pdf, [190], [
+        f"{data.get("current_functions", "")}"
+    ],[""])
+    table_row_mixed(pdf, [190], [
+        "Cree que su trabajo se relaciona con su formación, habilidades y experiencia:"
+    ],["B"])
+    table_row_mixed(pdf, [190], [
+        f"{data.get("job_relation", "")}"
+    ],[""])
+    table_row_mixed(pdf, [190], [
+        "Como es la relación con sus compañeros, suelen compartir experiencias y conocimientos:"
+    ],["B"])
+    table_row_mixed(pdf, [190], [
+        f"{data.get("colleague_relationship", "")}"
+    ],[""])
+    table_row_mixed(pdf, [190], [
+        "Que podría mejorar:",
+    ],["B"])
+    table_row_mixed(pdf, [190], [
+        f"{data.get("improvement_suggestions", "")}"
+    ],[""])
+    table_row_mixed(pdf, [190], [
+        "Los conflictos en su área se resuelven de forma abierta y eficaz:"
+    ],["B"])
+    table_row_mixed(pdf, [190], [
+        f"{data.get("conflict_resolution", "")}"
+    ],[""])
+    table_row_mixed(pdf, [190], [
+        "Su trabajo es desgastante:"
+    ],["B", ""])
+    table_row_mixed(pdf, [190], [
+        f"{data.get("job_exhaustion", "")}"
+    ],[""])
+    table_row_mixed(pdf,[190], [
+        "Siente presión laboral",
+    ],["B"])
+    table_row_mixed(pdf, [190], [
+        f"{data.get("job_pressure", "")}"
+    ],[""])
+    table_row_mixed(pdf, [190], [
+        "Le genera estrés:",
+    ],["B"])
+    table_row_mixed(pdf, [190], [
+        f"{data.get("job_stress", "")}"
+    ],[""])
+    table_row_mixed(pdf, [190], [
+        "Le alcanza el tiempo para estar al día en su trabajo:"
+    ],["B"])
+    table_row_mixed(pdf, [190], [
+        f"{data.get("job_time_management", "")}"
+    ],[""])
+    table_row_mixed(pdf, [190], [
+        "Le parece que su trabajo es reconocido por su jefe inmediato:"
+    ],["B"])
+    table_row_mixed(pdf, [190], [
+        f"{data.get("job_manager_recognition", "")}"
+    ],[""])
+    table_row_mixed(pdf, [190], [
+        "Se siente reconocido con Comercial Yolanda Salazar:"
+    ],["B"])
+    table_row_mixed(pdf, [190], [
+        f"{data.get("job_recognition", "")}"
+    ],[""])
+    table_row_mixed(pdf, [190], [
+        "Cuál es su proyección, su plan de vida o aspiraciones en Comercial Yolanda Salazar:"
+        
+    ],["B"])
+    table_row_mixed(pdf, [190], [
+        f"{data.get("job_projection", "")}"
+    ],[""])
+    table_row_mixed(pdf, [190], [
+        "Alguna vez, se ha sentido discriminado en su lugar de trabajo:"
+    ],["B"])
+    table_row_mixed(pdf, [190], [
+        f"{data.get("job_discrimination", "")}"
+    ],[""])
+    table_row_mixed(pdf, [190], [
+        "Qué haría para mejorar como trabajador:"
+    ],["B"])
+    table_row_mixed(pdf, [190], [
+        f"{data.get("job_improvement", "")}"
+    ],[""])
+    table_row_mixed(pdf, [190], [
+        "Que tipos de beneficios considera que Comercial Yolanda Salazar podría implementar:"
+    ],["B"])
+    table_row_mixed(pdf, [190], [
+        f"{data.get("job_benefits", "")}"
+    ],[""])
 
 def firmas(pdf):
 
@@ -893,9 +978,6 @@ def create_pdf(data):
 
     laboral(pdf, data)
     pdf.ln(3)
-
-    observaciones(pdf, data)
-    pdf.ln(5)
 
     firmas(pdf)
 
