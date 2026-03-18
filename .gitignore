@@ -4,3 +4,11 @@ data/data.xlsx
 pdf/*.pdf
 # Ignorar archivos JPG
 *jpg
+# Ignorar archivos de caché de Python
+__pycache__/
+services/__pycache__/
+templates/__pycache__/
+# Ignorar directorios de caché de Python
+__pycache__/
+*.pyc
+template/__pycache__/pdf_template.cpython-313.pyc

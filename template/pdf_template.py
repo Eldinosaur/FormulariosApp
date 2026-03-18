@@ -104,7 +104,6 @@ def table_row_mixed(pdf, widths, data, styles, height=8):
     pdf.set_font("Arial", "", 10)
 
 def table_row_multiline(pdf, widths, data, styles, line_height=6):
-
     if len(data) < len(widths):
         data = list(data) + [""] * (len(widths) - len(data))
 
@@ -118,14 +117,11 @@ def table_row_multiline(pdf, widths, data, styles, line_height=6):
         text = str(data[i])
         col_width = widths[i]
 
-        # dividir por saltos manuales
         lines = text.split("\n")
         total_lines = 0
 
         for line in lines:
             text_width = pdf.get_string_width(line)
-
-            # calcular cuántas líneas ocupa según ancho
             lines_needed = max(1, int(text_width / (col_width - 2)) + 1)
             total_lines += lines_needed
 
@@ -135,12 +131,15 @@ def table_row_multiline(pdf, widths, data, styles, line_height=6):
     max_lines = max(line_counts)
     row_height = max_lines * line_height
 
+    # revisar si cabe en la página actual
+    if pdf.get_y() + row_height > pdf.page_break_trigger:
+        pdf.add_page()
+
     # dibujar celdas con MISMA altura
     x_start = pdf.get_x()
     y_start = pdf.get_y()
 
     for i in range(len(widths)):
-
         pdf.set_xy(x_start, y_start)
         pdf.set_font("Arial", styles[i], 10)
 
@@ -149,13 +148,11 @@ def table_row_multiline(pdf, widths, data, styles, line_height=6):
 
         pdf.multi_cell(widths[i], line_height, str(data[i]), border=1)
 
-        # volver arriba para siguiente celda
         pdf.set_xy(x_current + widths[i], y_current)
 
         x_start += widths[i]
 
     pdf.ln(row_height)
-
     pdf.set_font("Arial", "", 10)
 
 def check_page_space(pdf, space_needed):
@@ -511,58 +508,318 @@ def vivienda(pdf, data):
         f"Estado:   \n\n{bueno_techo} Bueno     \n{regular_techo} Regular     \n{malo_techo} Malo       \n      "
     ],["", ""])
 
-def servicios_basicos(pdf, data):
+    hormigon = checkbox(data.get("wall_type") == "hormigon")
+    bloque = checkbox(data.get("wall_type") == "bloque")
+    adobe = checkbox(data.get("wall_type") == "adobe")
+    madera = checkbox(data.get("wall_type") == "madera")
+    bueno_pared = checkbox(data.get("wall_status") == "bueno")
+    regular_pared = checkbox(data.get("wall_status") == "regular")
+    malo_pared = checkbox(data.get("wall_status") == "malo")
+    table_row_mixed(pdf,[190],[
+        "Tipo de pared"
+    ],["B"])
+    table_row_multiline(pdf, [95,95], [
+        f"{hormigon} Hormigón     \n{bloque} Bloque     \n{adobe} Adobe     \n{madera} Madera     \nOtros:{data.get("wall_type_other", "")}",
+        f"Estado:   \n{bueno_pared} Bueno     \n{regular_pared} Regular     \n{malo_pared} Malo       \n      "
+    ],["", ""])
+    table_row_mixed(pdf,[190],[
+        "Tipo de piso"
+    ],["B"])
+    entablado = checkbox(data.get("floor_type") == "entablado")
+    baldosa = checkbox(data.get("floor_type") == "baldosa")
+    cemento = checkbox(data.get("floor_type") == "cemento")
+    tierra = checkbox(data.get("floor_type") == "tierra")
+    bueno_piso = checkbox(data.get("floor_status") == "bueno")
+    regular_piso = checkbox(data.get("floor_status") == "regular")
+    malo_piso = checkbox(data.get("floor_status") == "malo")
 
-    section_title(pdf, "4. SERVICIOS BÁSICOS")
+    table_row_multiline(pdf, [95,95], [
+        f"{entablado} Entablado     \n{baldosa} Baldosa     \n{cemento} Cemento     \n{tierra} Tierra     \nOtros:{data.get("floor_type_other", "")}",
+        f"Estado:   \n{bueno_piso} Bueno     \n{regular_piso} Regular     \n{malo_piso} Malo       \n      "
+    ],["", ""])
 
-    agua = checkbox(data.get("water"))
-    luz = checkbox(data.get("electricity"))
-    internet = checkbox(data.get("internet"))
+    table_row_mixed(pdf,[190],[
+        "Tipo de estructura"
+    ],["B"])
+    hormigon = checkbox(data.get("structure_type") == "hormigon")
+    hierro = checkbox(data.get("structure_type") == "hierro")
+    madera = checkbox(data.get("structure_type") == "madera")
+    bloque = checkbox(data.get("structure_type") == "bloque")
+    bueno_estructura = checkbox(data.get("structure_status") == "bueno")
+    regular_estructura = checkbox(data.get("structure_status") == "regular")
+    malo_estructura = checkbox(data.get("structure_status") == "malo")
 
-    table_row(pdf, [190], [
-        f"{agua} Agua potable      {luz} Energía eléctrica      {internet} Internet"
-    ])
+    table_row_multiline(pdf, [95,95], [
+        f"{hormigon} Hormigón     \n{hierro} Hierro     \n{madera} Madera     \n{bloque} Bloque     \nOtros:{data.get("structure_type_other", "")}",
+        f"Estado:   \n{bueno_estructura} Bueno     \n{regular_estructura} Regular     \n{malo_estructura} Malo       \n      "
+    ],["", ""])
+    table_row_mixed(pdf,[190],[
+        "Servicios básicos"
+    ],["B"])
+    
+    #----------------------------------
+    # Agua
+    #----------------------------------
+    potable = checkbox(data.get("water_type") == "potable")
+    cisterna = checkbox(data.get("water_type") == "cisterna")
+    vertiente = checkbox(data.get("water_type") == "vertiente")
+    repartidor = checkbox(data.get("water_type") == "repartidor")
+    sequia = checkbox(data.get("water_type") == "sequia")
+    table_row_mixed(pdf, [30,160], [
+        "Agua",
+        f"{potable} Potable     {cisterna} Cisterna     {vertiente} Vertiente     {repartidor} Repartidor     {sequia} Sequía"
+    ],["B", ""])
+    #----------------------------------
+    # Luz
+    #----------------------------------
+    permanente = checkbox(data.get("light_type") == "permanente")
+    temporal = checkbox(data.get("light_type") == "temporal")
+    noenergia = checkbox(data.get("light_type") == "noenergia")
+    table_row_mixed(pdf, [30,160], [
+        "Luz",
+        f"{permanente} Permanente     {temporal} Temporal     {noenergia} No Energía"
+    ],["B", ""])
+    #----------------------------------
+    # SSHH
+    #----------------------------------
+    sshhpropio = checkbox(data.get("sshh_type") == "propio")
+    sshhcompartido = checkbox(data.get("sshh_type") == "compartido")
+    sshhpozo = checkbox(data.get("sshh_type") == "pozo")
+    sshhlibre = checkbox(data.get("sshh_type") == "libre")
 
+    table_row_multiline(pdf, [30,160], [
+        "SSHH",
+        f"{sshhpropio} Propio     {sshhcompartido} Compartido     {sshhpozo} Pozo     {sshhlibre} Libre",
+    ],["B", ""])
+    table_row_mixed(pdf, [30,160], [
+        "Observaciones:",
+        f"{data.get("basic_services_other", "")}"
+    ],["B", ""])
+    sihacinamiento = checkbox(data.get("hacinamiento") == "si")
+    no_hacinamiento = checkbox(data.get("hacinamiento") == "no")
+    table_row_mixed(pdf, [30,160], [
+        "Hacinamiento",
+        f"{sihacinamiento} Sí     {no_hacinamiento} No"
+    ],["B", ""])
+    table_row_mixed(pdf, [50,140], [
+        "Manejo de desechos", 
+        f"{data.get("waste_management", "")}"
+    ],["B", ""])
+    transportepublico = checkbox(data.get("transport_type") == "publico")
+    transporteempresa = checkbox(data.get("transport_type") == "empresa")
+    transporteprivado = checkbox(data.get("transport_type") == "privado")
+    table_row_mixed(pdf, [30,160], [
+        "Transporte",
+        f"{transportepublico} Público     {transporteempresa} Empresa     {transporteprivado} Privado     Otro: {data.get("transport_type_other", "")}"
+    ],["B", ""])
+    table_row_mixed(pdf, [60,130], [
+        "Que electrodomesticos posee:",
+        f"{data.get("appliances", "")}"
+    ],["B", ""])
+    si_internet = checkbox(data.get("internet") == "si")
+    no_internet = checkbox(data.get("internet") == "no")
+    table_row_mixed(pdf, [60,130], [
+        "Dispone de servicio de Internet",
+        f"{si_internet} Sí     {no_internet} No"
+    ],["B", ""])
+    recarga = checkbox(data.get("internet_type") == "recarga")
+    mensual = checkbox(data.get("internet_type") == "mensual")
+    satelital = checkbox(data.get("internet_type") == "satelital")
+    fibraoptica = checkbox(data.get("internet_type") == "fibraoptica")
+    table_row_mixed(pdf, [60,130], [
+        "Tipo de Internet",
+        f"{recarga} Recarga     {mensual} Mensual     {satelital} Satelital     {fibraoptica} Fibra Óptica"
+    ],["B", ""])
+    sianimales = checkbox(data.get("animals") == "si")
+    no_sianimales = checkbox(data.get("animals") == "no")
+    table_row_mixed(pdf, [40,30, 30,40,30,20], [
+        "Tiene animales",
+        f"{sianimales} Sí     {no_sianimales} No",
+        "Tipo",
+        f"{data.get('animal_type', '')}",
+        "Cantidad",
+        data.get('animal_quantity', '')
+    ],["B", ""])
+    si_peste = checkbox(data.get("peste") == "si")
+    no_peste = checkbox(data.get("peste") == "no")
+    table_row_mixed(pdf, [40,30,75,45], [
+        "Zona de peste",
+        f"{si_peste} Sí     {no_peste} No",
+        "Lugar de tenencia (dentro o fuera del hogar)",
+        f"{data.get('animal_location', '')}"
+    ],["B", ""])
+    table_row_mixed(pdf, [50, 140], [
+        "Observaciones:",
+        f"{data.get('animal_observations', '')}"
+    ],["B", ""])
 
 def economia(pdf, data):
 
-    section_title(pdf, "5. SITUACIÓN ECONÓMICA")
+    section_title(pdf, "4. SITUACIÓN ECONÓMICA")
 
-    shared = checkbox(data.get("shared_expenses"))
+    gastos_compartidos = checkbox(data.get("shared_expenses") == "si")
+    gastos_no_compartidos = checkbox(data.get("shared_expenses") == "no")
+    table_row_mixed(pdf, [100, 90], [
+        "Los gastos en el hogar son compartidos",
+        f"{gastos_compartidos} Sí     {gastos_no_compartidos} No"
+    ],["B", ""])
+    table_row_mixed(pdf, [190], [
+        "Personas que aportan economicamente"
+    ],["B"])
+    table_row_multiline(pdf, [95,95], [
+        f"Padre: \nMadre: \nHermanos: \nColaborador: \nConyuge: \nHijos: \nOtros:",
+        f"${data.get('father_contribution', '')} \n${data.get('mother_contribution', '')} \n${data.get('siblings_contribution', '')} \n${data.get('collaborators_contribution', '')} \n${data.get('spouse_contribution', '')} \n${data.get('children_contribution', '')} \n${data.get('other_contribution', '')}"   
+    ],["B", ""])
+    table_row_mixed(pdf, [95, 95], [
+        "TOTAL:",
+        f"${data.get('total_contribution', '')}"
+    ],["B", ""])
+    table_row_mixed(pdf, [95, 95], [
+        "Monto de deudas:", f"${data.get('debt_amount', '')}"
+    ],["B", ""])
+    prestamos_formales = checkbox(data.get("formal_loans"))
+    table_row_mixed(pdf, [95, 95], [
+        f"Prestamos: {prestamos_formales} Formales",
+        f"${data.get('formal_loans_amount', '')}"
+    ],["B", ""])
+    prestamos_informales = checkbox(data.get("informal_loans"))
+    table_row_multiline(pdf, [95, 95], [
+        f"Prestamos: {prestamos_informales} Informales"
+        f"\nFamiliares:"
+        f"\nChulqueros"
+        f"\n\nOtros:",
+        f"${data.get('informal_loans_amount', '')}"
+        f"\n${data.get('informal_loans_family_amount', '')}"
+        f"\n${data.get('informal_loans_moneylender_amount', '')}"
+        f"\n\n${data.get('informal_loans_other_amount', '')}"
+    ],["B", ""])
+    sitarjetas = checkbox(data.get("credit_cards") == 'si')
+    notarjetas = checkbox(data.get("credit_cards") == 'no')
+    table_row_mixed(pdf, [95, 95], [
+        "Posee tarjetas de crédito?",
+        f"{sitarjetas} Sí     {notarjetas} No"
+    ],["B", ""])
+    table_row_mixed(pdf, [190], [
+        "Gastos"
+    ],["B"])
+    table_row_multiline(pdf, [95, 95], [
+        f"Alimentación:\n"
+        f"Educación:\n"
+        f"Vivienda:\n"
+        f"Vestimenta:\n"
+        f"Salud:\n"
+        f"Transporte:\n"
+        f"Servicios básicos:\n"
+        f"Internet:\n"
+        f"Tv Cable:\n"
+        f"Plan Celular:\n"
+        f"Prestamos:\n"
+        f"Prestamos Quirografarios:\n"
+        f"Tarjetas de crédito:\n"
+        f"Pension de Alimentos:\n"
+        f"Locales Comerciales:\n"
+        f"Apoyo economico a terceras personas:\n"
+        f"Otros Gastos:\n",
+        f"${data.get("food_support", "")}\n"
+        f"${data.get("education_support", "")}\n"
+        f"${data.get("housing_support", "")}\n"
+        f"${data.get("clothing_support", "")}\n"
+        f"${data.get("health_support", "")}\n"
+        f"${data.get("transport_support", "")}\n"
+        f"${data.get("basic_services_support", "")}\n"
+        f"${data.get("internet_support", "")}\n"
+        f"${data.get("cable_tv_support", "")}\n"
+        f"${data.get("cell_plan_support", "")}\n"
+        f"${data.get("loans_support", "")}\n"
+        f"${data.get("unsecured_loans_support", "")}\n"
+        f"${data.get("credit_cards_support", "")}\n"
+        f"${data.get("alimony_support", "")}\n"
+        f"${data.get("commercial_properties_support", "")}\n"
+        f"${data.get("financial_support_others", "")}\n"
+        f"${data.get("other_expenses_support", "")}\n"
+    ],["B", ""])
+    table_row_mixed(pdf, [95, 95], [    
+        "TOTAL GASTOS:",
+        f"${data.get("total_expenses", "")}"
+    ],["B", ""])
+    sitransporte = checkbox(data.get("transportation") == 'si')
+    notransporte = checkbox(data.get("transportation") == 'no')
+    table_row_mixed(pdf, [95, 95], [
+        "Posee vehiculo o algun medio de transporte",
+        f"{sitransporte} Sí     {notransporte} No"
+    ],["B", ""])
+    table_row_mixed(pdf, [50, 140], [
+        "Descripcion",
+        f"{data.get("transportation_description", "")}"
+    ],["B", ""])
+    table_row_mixed(pdf, [190], [
+        "Actividad económica adicional (ingresos, horario en que labora):"        
+    ],["B"])
+    table_row_mixed(pdf, [190], [
+        f"{data.get("additional_economic_activity", "")}"
+    ],[""])
 
-    table_row(pdf, [50, 140], [
-        "Gastos compartidos",
-        f"{shared} Sí"
-    ])
-
-    pdf.cell(190, 6, "¿Quiénes aportan?", border=1, ln=True)
-    box(pdf, data.get("contributors", ""))
-
-    pdf.cell(190, 6, "Gastos principales", border=1, ln=True)
-    box(pdf, data.get("expenses", ""))
-
-    pdf.cell(190, 6, "Deudas", border=1, ln=True)
-    box(pdf, data.get("debts", ""))
-
+    si_crianza_animales = checkbox(data.get("animal_breeding") == 'si')
+    no_crianza_animales = checkbox(data.get("animal_breeding") == 'no')
+    table_row_mixed(pdf, [90,100], [
+        "Se dedica a la crianza de animales?",
+        f"{si_crianza_animales} Sí     {no_crianza_animales} No"
+    ],["B", ""])
+    table_row_mixed(pdf, [190], [
+        "Resumen de la actividad economica de la familia"
+    ],["B"])
+    table_row_mixed(pdf, [35,30,35,30,30,30], [
+        "Ingresos:", data.get("total_income", ""), "Egresos:", data.get("total_expenses", ""), "Saldo:", data.get("balance", "")
+    ],["B", "","B", "","B", ""])
 
 def salud(pdf, data):
 
-    section_title(pdf, "6. SALUD")
+    section_title(pdf, "5. SALUD")
 
-    sport = checkbox(data.get("sports"))
+    practica_deporte = checkbox(data.get("sports") == 'si')
+    no_practica_deporte = checkbox(data.get("sports") == 'no')
 
-    table_row(pdf, [50, 140], [
-        "Actividad física",
-        f"{sport} Sí"
-    ])
+    table_row_mixed(pdf, [120,70], [
+        "¿El colaborador practica algun deporte o actividad física?",
+        f"{practica_deporte} Sí     {no_practica_deporte} No"
+    ],["B", ""])
+    table_row_mixed(pdf, [50,140], [
+        "¿Cual?",
+        f"{data.get("sports_description", "")}"
+    ],["B", ""])
+    table_row_mixed(pdf, [50,140], [
+        "¿Con que frecuencia?",
+        f"{data.get("sports_frequency", "")}"
+    ],["B", ""])
+    table_row_mixed(pdf, [90,100], [
+        "¿El colaborador tiene alguna enfermedad?",
+        f"{data.get("disease", "")}"
+    ],["B", ""])
+    familiar_problemas_salud = checkbox(data.get("family_health_problems") == 'si')
+    no_familiar_problemas_salud = checkbox(data.get("family_health_problems") == 'no')
+    table_row_mixed(pdf, [120,70], [
+        "¿La familia tiene problemas de salud?",
+        f"{familiar_problemas_salud} Sí     {no_familiar_problemas_salud} No"
+    ],["B", ""])
+    table_row_mixed(pdf, [50,140], [
+        "¿Cual?",
+        f"{data.get("family_health_problems_description", "")}"
+    ],["B", ""])
+    familiar_discapacidad = checkbox(data.get("family_disability") == 'si')
+    no_familiar_discapacidad = checkbox(data.get("family_disability") == 'no')
+    table_row_mixed(pdf, [120,70], [
+        "¿La familia tiene algún tipo de discapacidad?",
+        f"{familiar_discapacidad} Sí     {no_familiar_discapacidad} No"
+    ],["B", ""])
+    table_row_mixed(pdf, [30,30,35,30,35,30], [
+        "Tipo:", f"{data.get("family_disability_type", "")}",
+        "Porcentaje:", f"{data.get("family_disability_percentage", "")}",
+        "Parentezco:", f"{data.get("family_disability_relationship", "")}"
+    ],["B", "","B", "","B", ""])
+    
+def laboral(pdf,data):
 
-    pdf.cell(190, 6, "Enfermedades", border=1, ln=True)
-    box(pdf, data.get("disease", ""))
-
-
-def laboral(pdf, data):
-
-    section_title(pdf, "7. SITUACIÓN LABORAL")
+    section_title(pdf, "6. SITUACIÓN LABORAL")
 
     pdf.cell(190, 6, "Funciones actuales", border=1, ln=True)
     box(pdf, data.get("functions", ""), 25)
@@ -626,9 +883,6 @@ def create_pdf(data):
     pdf.ln(3)
 
     vivienda(pdf, data)
-    pdf.ln(3)
-
-    servicios_basicos(pdf, data)
     pdf.ln(3)
 
     economia(pdf, data)
