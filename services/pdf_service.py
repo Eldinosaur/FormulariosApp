@@ -6,6 +6,8 @@ PDF_PATH = 'pdf'
 
 os.makedirs(PDF_PATH, exist_ok=True)  # Crear la carpeta 'pdf' si no existe
 
+
+
 # Función para crear el archivo PDF con los datos del formulario
 def create_pdf_file(data):
     

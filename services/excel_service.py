@@ -1,28 +1,101 @@
 import os
 from openpyxl import Workbook, load_workbook
 
-# Ruta del archivo Excel
 FILE_PATH = 'data/data.xlsx'
 
-# Función para crear el archivo Excel y agregar datos
+HEADERS = [
+    # Datos principales
+    "CI", "Nombre", "Edad", "Email", "Dirección", "Teléfono", "Fecha",
+
+    # Vivienda
+    "Sector", "Tipo Vivienda", "Tenencia", "N° Personas", "Tiempo Sector",
+
+    # Servicios
+    "Agua", "Luz", "Internet",
+
+    # Economía
+    "Gastos Compartidos", "Aportantes", "Gastos", "Deudas",
+
+    # Salud y otros
+    "Salud", "Funciones", "Plan Vida", "Observaciones",
+]
+
+# Agregar headers de familiares (6 máximo)
+for i in range(1, 7):
+    HEADERS.extend([
+        f"F{i}_Nombre",
+        f"F{i}_Edad",
+        f"F{i}_Parentesco",
+        f"F{i}_Ocupacion"
+    ])
+
+
 def create_excel_file(data):
-    # Verificar si el archivo ya existe, si no, crear uno nuevo
+
+    # CI = ID
+    ci = data.get("ci") or data.get("id")
+
+    # Crear archivo si no existe
     if not os.path.exists(FILE_PATH):
-        os.makedirs('data', exist_ok=True)  # Crear la carpeta 'data' si no existe
-        # Crear un nuevo libro de trabajo
+        os.makedirs('data', exist_ok=True)
         workbook = Workbook()
         worksheet = workbook.active
-        # Agregar encabezados a la hoja de cálculo
-        worksheet.append(['ID', 'Name', 'Email'])
+        worksheet.append(HEADERS)
         workbook.save(FILE_PATH)
-        
-    # Cargar el libro de trabajo existente    
+
     workbook = load_workbook(FILE_PATH)
     worksheet = workbook.active
-    # Agregar los datos a la hoja de cálculo
-    worksheet.append([
-        data['id'],
-        data['name'],
-        data['email']
-    ])
+
+    # -------------------------
+    # BASE DATA
+    # -------------------------
+    row = [
+        ci,
+        data.get("name"),
+        data.get("age"),
+        data.get("email"),
+        data.get("address"),
+        data.get("phone"),
+        data.get("date"),
+
+        data.get("sector"),
+        data.get("house_type"),
+        data.get("ownership"),
+        data.get("people_count"),
+        data.get("time_sector"),
+
+        str(data.get("water")),
+        str(data.get("electricity")),
+        str(data.get("internet")),
+
+        str(data.get("shared_expenses")),
+        data.get("contributors"),
+        data.get("expenses"),
+        data.get("debts"),
+
+        data.get("disease"),
+        data.get("functions"),
+        data.get("life_plan"),
+        data.get("observations"),
+    ]
+
+    # -------------------------
+    # FAMILIARES (MAX 6)
+    # -------------------------
+    family = data.get("family_members", [])
+
+    for i in range(6):
+        if i < len(family):
+            member = family[i]
+            row.extend([
+                member.get("name", ""),
+                member.get("age", ""),
+                member.get("relation", ""),
+                member.get("job", "")
+            ])
+        else:
+            # Vacíos si no hay suficientes
+            row.extend(["", "", "", ""])
+
+    worksheet.append(row)
     workbook.save(FILE_PATH)
