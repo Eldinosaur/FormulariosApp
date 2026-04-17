@@ -1,5 +1,6 @@
 from fpdf import FPDF
 import os
+from datetime import datetime
 from PIL import Image, ExifTags
 
 PAGE_WIDTH = 190
@@ -983,7 +984,8 @@ def create_pdf(data):
 
     os.makedirs("pdf", exist_ok=True)
 
-    filename = f"pdf/{data.get('ci','sin_ci')}.pdf"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"pdf/{data.get('ci','sin_ci')}_{timestamp}.pdf"
     pdf.output(filename)
 
     return filename
