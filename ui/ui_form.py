@@ -11,7 +11,7 @@ class App:
     def __init__(self, root):
 
         self.root = root
-        self.root.title("Sistema Socioeconómico - Comercial Yolanda Salazar")
+        self.root.title("Ficha Socioeconómica")
         self.root.geometry("1300x850")
         self.root.configure(bg="#f0f2f5")
 
@@ -44,11 +44,11 @@ class App:
         self.top_bar.pack(fill="x")
         self.top_bar.pack_propagate(False)
 
-        tk.Label(self.top_bar, text="📋 SISTEMA SOCIOECONÓMICO", 
+        tk.Label(self.top_bar, text="📋 FICHA SOCIOECONÓMICA", 
                 font=("Segoe UI", 16, "bold"),
                 fg="white", bg=self.colors["primary"]).pack(side="left", padx=20, pady=15)
 
-        tk.Label(self.top_bar, text="Comercial Yolanda Salazar", 
+        tk.Label(self.top_bar, text="Developed by: Eldinosaur", 
                 font=("Segoe UI", 10),
                 fg="#bfdbfe", bg=self.colors["primary"]).pack(side="left", padx=10)
 
@@ -749,12 +749,46 @@ class App:
         data["visit_date"] = datetime.datetime.now().strftime("%d/%m/%Y")
         data["photo"] = self.photo_path.get()
         
-        # Familia
+        # =========================================================
+        # FILTRAR SOLO FILAS COMPLETAS DE FAMILIARES
+        # =========================================================
         family = []
-        for member in self.family_rows:
-            family.append({k: e.get() for k, e in member.items()})
-        data["family_members"] = family
+        skipped_count = 0
         
+        for member in self.family_rows:
+            # Limpiar y verificar cada campo
+            row_data = {}
+            is_complete = True
+            
+            for k, e in member.items():
+                value = e.get().strip()
+                row_data[k] = value
+                if value == "":  # Si algún campo está vacío, la fila es incompleta
+                    is_complete = False
+            
+            # Solo agregar si TODOS los campos tienen datos
+            if is_complete and any(row_data.values()):
+                family.append(row_data)
+            elif any(row_data.values()):
+                # Fila parcialmente llena - contar para advertencia
+                skipped_count += 1
+        
+        # Mostrar advertencia si se omitieron filas
+        if skipped_count > 0:
+            messagebox.showwarning(
+                "Filas omitidas", 
+                f"⚠️ Se omitieron {skipped_count} fila(s) de familiares porque estaban incompletas.\n\n"
+                "Para que un familiar se guarde correctamente, debe completar:\n"
+                "• Nombre\n"
+                "• Edad\n"
+                "• Parentesco\n"
+                "• Ocupación\n"
+                "• Ingreso\n\n"
+                "Las filas vacías o incompletas no se incluirán en el PDF."
+            )
+        
+        data["family_members"] = family
+    
         return data
 
     def save_all(self):
