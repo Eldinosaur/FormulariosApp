@@ -9,24 +9,19 @@ PAGE_WIDTH = 190
 class PDF(FPDF):
 
     def header(self):
-
         self.set_font("Arial", "B", 14)
         
-
         if self.page_no() == 1:
             self.cell(0, 10, "FICHA SOCIOECONÓMICA", 0, 1, "C")
             self.rect(165, 10, 30, 35)
             
             if hasattr(self, "photo_path") and self.photo_path and os.path.exists(self.photo_path):
                 self.image(self.photo_path, x=165, y=10, w=30, h=35)
-
             self.set_y(50)
-
         else:
             self.ln(10)
 
     def footer(self):
-
         self.set_y(-15)
         self.set_font("Arial", "I", 8)
         self.cell(0, 10, f"Página {self.page_no()}", 0, 0, "C")
@@ -37,78 +32,60 @@ class PDF(FPDF):
 # -----------------------------
 
 def fix_image_orientation(image_path):
-
     try:
         image = Image.open(image_path)
-
         for orientation in ExifTags.TAGS.keys():
             if ExifTags.TAGS[orientation] == 'Orientation':
                 break
-
         exif = image._getexif()
-
         if exif is not None:
             orientation_value = exif.get(orientation)
-
             if orientation_value == 3:
                 image = image.rotate(180, expand=True)
             elif orientation_value == 6:
                 image = image.rotate(270, expand=True)
             elif orientation_value == 8:
                 image = image.rotate(90, expand=True)
-
         fixed_path = "temp_fixed.jpg"
         image.save(fixed_path)
-
         return fixed_path
-
     except Exception:
         return image_path
 
 def checkbox(value):
     return "[X]" if value else "[ ]"
 
-
 def section_title(pdf, title):
     pdf.set_font("Arial", "B", 10)
     pdf.cell(PAGE_WIDTH, 8, title, border=1, ln=True)
 
-
 def table_row(pdf, widths, data, height=8):
-
     if len(data) < len(widths):
         data = list(data) + [""] * (len(widths) - len(data))
-
     for i in range(len(widths)):
         pdf.cell(widths[i], height, str(data[i]), border=1)
-
     pdf.ln(height)
     
 def table_row_mixed(pdf, widths, data, styles, height=8):
-
     if len(data) < len(widths):
         data = list(data) + [""] * (len(widths) - len(data))
-
     if len(styles) < len(widths):
         styles = list(styles) + [""] * (len(widths) - len(styles))
-
     for i in range(len(widths)):
         pdf.set_font("Arial", styles[i], 10)
         pdf.cell(widths[i], height, str(data[i]), border=1)
-
     pdf.ln(height)
     pdf.set_font("Arial", "", 10)
 
-
+# ========== FUNCIÓN CORREGIDA - TODAS LAS CELDAS MISMA ALTURA ==========
 def table_row_multiline(pdf, widths, data, styles, line_height=5):
-    """Fila que maneja texto largo con saltos de línea automáticos"""
+    """Fila que maneja texto largo - TODAS las celdas tienen la MISMA altura"""
     if len(data) < len(widths):
         data = list(data) + [""] * (len(widths) - len(data))
-
     if len(styles) < len(widths):
         styles = list(styles) + [""] * (len(widths) - len(styles))
 
-    # calcular número de líneas REAL por celda
+    # Calcular número de líneas REAL por celda
     line_counts = []
     pdf.set_font("Arial", "", 8)
 
@@ -131,6 +108,7 @@ def table_row_multiline(pdf, widths, data, styles, line_height=5):
                 total_lines += 1
         line_counts.append(max(1, total_lines))
 
+    # Altura MÁXIMA de la fila
     max_lines = max(line_counts)
     row_height = max_lines * line_height
 
@@ -140,31 +118,40 @@ def table_row_multiline(pdf, widths, data, styles, line_height=5):
     x_start = pdf.get_x()
     y_start = pdf.get_y()
 
+    # Dibujar cada celda y luego rellenar hasta la altura máxima
     for i in range(len(widths)):
         pdf.set_xy(x_start, y_start)
         pdf.set_font("Arial", styles[i], 8)
         
-        pdf.multi_cell(widths[i], line_height, str(data[i]), border=1)
+        # Guardar posición X actual
+        x_current = pdf.get_x()
         
+        # Dibujar el contenido de la celda
+        pdf.multi_cell(widths[i], line_height, str(data[i]), border=0)
+        
+        # Dibujar el borde completo de la celda con la altura máxima
+        pdf.rect(x_current, y_start, widths[i], row_height)
+        
+        # Avanzar X para la siguiente celda
         x_start += widths[i]
+        # Volver a la posición Y inicial
         pdf.set_y(y_start)
 
+    # Mover al final de la fila
     pdf.set_y(y_start + row_height)
     pdf.set_x(pdf.l_margin)
     pdf.set_font("Arial", "", 10)
 
-
 def check_page_space(pdf, space_needed):
     if pdf.get_y() + space_needed > 270:
         pdf.add_page()
-
 
 def box(pdf, text, h=20):
     pdf.multi_cell(PAGE_WIDTH, h / 4, str(text), border=1)
 
 
 # -----------------------------
-# SECCIONES - TODOS los campos usan table_row_multiline
+# SECCIONES
 # -----------------------------
 
 def fecha_visita(pdf, data):
@@ -172,9 +159,7 @@ def fecha_visita(pdf, data):
         "Fecha de Visita", data.get("visit_date", "")
     ], ["B", ""])
 
-
 def datos_personales(pdf, data):
-
     section_title(pdf, "1. DATOS PERSONALES DEL COLABORADOR")
 
     table_row_multiline(pdf, [40, 150], [
@@ -259,9 +244,7 @@ def datos_personales(pdf, data):
         "Contacto de emergencia", data.get("emergency_contact", "")
     ], ["B", ""])
 
-
 def miembros_hogar(pdf, data):
-
     section_title(pdf, "2. MIEMBROS DEL HOGAR")
     table_row_multiline(pdf, [190], [
         "Célula Social - Composición Familiar del Colaborador (viven dentro del hogar)"
@@ -279,7 +262,6 @@ def miembros_hogar(pdf, data):
         return
 
     for i, m in enumerate(miembros, start=1):
-        
         ingreso = m.get("income", "")
         if ingreso:
             try:
@@ -287,47 +269,16 @@ def miembros_hogar(pdf, data):
             except:
                 ingreso = str(ingreso)
         
-        row = [
+        table_row_multiline(pdf, widths, [
             str(i),
             str(m.get("name", "")),
             str(m.get("age", "")),
             str(m.get("relation", "")),
             str(m.get("job", "")),
             ingreso
-        ]
-
-        # calcular altura dinámica
-        line_counts = []
-        for j in range(len(row)):
-            text = row[j]
-            col_width = widths[j]
-            if text:
-                pdf.set_font("Arial", "", 8)
-                text_width = pdf.get_string_width(text)
-                lines = max(1, int(text_width / (col_width - 3)) + 1)
-                line_counts.append(lines)
-            else:
-                line_counts.append(1)
-
-        row_height = max(line_counts) * 5
-        check_page_space(pdf, row_height)
-
-        x_start = pdf.get_x()
-        y_start = pdf.get_y()
-
-        for j in range(len(row)):
-            pdf.set_xy(x_start, y_start)
-            pdf.set_font("Arial", "", 8)
-            pdf.multi_cell(widths[j], 5, row[j], border=1)
-            x_start += widths[j]
-            pdf.set_y(y_start)
-
-        pdf.set_y(y_start + row_height)
-        pdf.set_x(pdf.l_margin)
-
+        ], ["", "", "", "", "", ""])
 
 def info_familia(pdf, data):
-    
     table_row_multiline(pdf, [190], [
         "Información de la Familia:"
     ], ["B"])
@@ -444,14 +395,11 @@ def info_familia(pdf, data):
         "Recibió dinero del exterior:", f"{sirecibedinero} Sí     {nosirecibedinero} No"
     ], ["B", ""])
 
-
 def vivienda(pdf, data):
-    
     section_title(pdf, "3. VIVIENDA")
 
     urbano = checkbox(data.get("sector") == "urbano")
     rural = checkbox(data.get("sector") == "rural")
-
     table_row_multiline(pdf, [50, 140], [
         "Sector",
         f"{urbano} Urbano     {rural} Rural"
@@ -496,7 +444,6 @@ def vivienda(pdf, data):
     
     posesion = checkbox(data.get("house_possession") == "si")
     no_posesion = checkbox(data.get("house_possession") == "no")
-    
     table_row_multiline(pdf, [50, 30, 20, 20, 30, 40], [
         "¿Posee la vivienda?",
         f"{posesion} Sí     {no_posesion} No",
@@ -625,7 +572,6 @@ def vivienda(pdf, data):
     sshhcompartido = checkbox(data.get("sshh_type") == "compartido")
     sshhpozo = checkbox(data.get("sshh_type") == "pozo")
     sshhlibre = checkbox(data.get("sshh_type") == "libre")
-
     table_row_multiline(pdf, [30, 160], [
         "SSHH",
         f"{sshhpropio} Propio     {sshhcompartido} Compartido     {sshhpozo} Pozo     {sshhlibre} Libre",
@@ -698,9 +644,7 @@ def vivienda(pdf, data):
         "Observaciones:", data.get('animal_observations', '')
     ], ["B", ""])
 
-
 def economia(pdf, data):
-
     section_title(pdf, "4. SITUACIÓN ECONÓMICA")
 
     gastos_compartidos = checkbox(data.get("shared_expenses") == "si")
@@ -833,14 +777,11 @@ def economia(pdf, data):
         "Saldo:", data.get("balance", "")
     ], ["B", "", "B", "", "B", ""])
 
-
 def salud(pdf, data):
-
     section_title(pdf, "5. SALUD")
 
     practica_deporte = checkbox(data.get("sports") == 'si')
     no_practica_deporte = checkbox(data.get("sports") == 'no')
-
     table_row_multiline(pdf, [120, 70], [
         "¿El colaborador practica algun deporte o actividad física?",
         f"{practica_deporte} Sí     {no_practica_deporte} No"
@@ -881,10 +822,8 @@ def salud(pdf, data):
         "Porcentaje:", f"{data.get("family_disability_percentage", "")}",
         "Parentezco:", f"{data.get("family_disability_relationship", "")}"
     ], ["B", "", "B", "", "B", ""])
-    
 
 def laboral(pdf, data):
-
     section_title(pdf, "6. SITUACIÓN LABORAL")
 
     table_row_multiline(pdf, [190], [
@@ -1015,13 +954,9 @@ def laboral(pdf, data):
         data.get("job_benefits", "")
     ], [""])
 
-
 def firmas(pdf):
-
     check_page_space(pdf, 50)
-
     section_title(pdf, "FIRMAS")
-
     pdf.ln(10)
 
     pdf.cell(90, 8, "_____________________________", 0, 0, "C")
@@ -1042,7 +977,6 @@ def firmas(pdf):
 # -----------------------------
 
 def create_pdf(data):
-
     pdf = PDF()
     
     photo = data.get("photo")
