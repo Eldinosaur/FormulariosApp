@@ -55,9 +55,14 @@ def fix_image_orientation(image_path):
 def checkbox(value):
     return "[X]" if value else "[ ]"
 
+# ========== TÍTULO DE SECCIÓN CON FONDO CELESTE ==========
 def section_title(pdf, title):
+    """Título de sección con fondo celeste y texto azul oscuro"""
     pdf.set_font("Arial", "B", 10)
-    pdf.cell(PAGE_WIDTH, 8, title, border=1, ln=True)
+    pdf.set_fill_color(200, 220, 255)
+    pdf.set_text_color(0, 0, 150)
+    pdf.cell(PAGE_WIDTH, 8, title, border=1, ln=True, fill=True)
+    pdf.set_text_color(0, 0, 0)
 
 def table_row(pdf, widths, data, height=8):
     if len(data) < len(widths):
@@ -77,7 +82,7 @@ def table_row_mixed(pdf, widths, data, styles, height=8):
     pdf.ln(height)
     pdf.set_font("Arial", "", 10)
 
-# ========== FUNCIÓN CORREGIDA - TODAS LAS CELDAS MISMA ALTURA ==========
+# ========== FUNCIÓN MULTILÍNEA CORREGIDA ==========
 def table_row_multiline(pdf, widths, data, styles, line_height=5):
     """Fila que maneja texto largo - TODAS las celdas tienen la MISMA altura"""
     if len(data) < len(widths):
@@ -126,7 +131,7 @@ def table_row_multiline(pdf, widths, data, styles, line_height=5):
         # Guardar posición X actual
         x_current = pdf.get_x()
         
-        # Dibujar el contenido de la celda
+        # Dibujar el contenido de la celda SIN borde
         pdf.multi_cell(widths[i], line_height, str(data[i]), border=0)
         
         # Dibujar el borde completo de la celda con la altura máxima
@@ -147,7 +152,15 @@ def check_page_space(pdf, space_needed):
         pdf.add_page()
 
 def box(pdf, text, h=20):
+    """Función box corregida - asegura que h sea número"""
+    if isinstance(h, str):
+        try:
+            h = float(h)
+        except:
+            h = 20
+    pdf.set_font("Arial", "", 8)
     pdf.multi_cell(PAGE_WIDTH, h / 4, str(text), border=1)
+    pdf.set_font("Arial", "", 10)
 
 
 # -----------------------------
@@ -279,6 +292,8 @@ def miembros_hogar(pdf, data):
         ], ["", "", "", "", "", ""])
 
 def info_familia(pdf, data):
+    section_title(pdf, "3. INFORMACIÓN DE LA FAMILIA")
+    
     table_row_multiline(pdf, [190], [
         "Información de la Familia:"
     ], ["B"])
@@ -396,7 +411,7 @@ def info_familia(pdf, data):
     ], ["B", ""])
 
 def vivienda(pdf, data):
-    section_title(pdf, "3. VIVIENDA")
+    section_title(pdf, "4. VIVIENDA")
 
     urbano = checkbox(data.get("sector") == "urbano")
     rural = checkbox(data.get("sector") == "rural")
@@ -645,7 +660,7 @@ def vivienda(pdf, data):
     ], ["B", ""])
 
 def economia(pdf, data):
-    section_title(pdf, "4. SITUACIÓN ECONÓMICA")
+    section_title(pdf, "5. SITUACIÓN ECONÓMICA")
 
     gastos_compartidos = checkbox(data.get("shared_expenses") == "si")
     gastos_no_compartidos = checkbox(data.get("shared_expenses") == "no")
@@ -778,7 +793,7 @@ def economia(pdf, data):
     ], ["B", "", "B", "", "B", ""])
 
 def salud(pdf, data):
-    section_title(pdf, "5. SALUD")
+    section_title(pdf, "6. SALUD")
 
     practica_deporte = checkbox(data.get("sports") == 'si')
     no_practica_deporte = checkbox(data.get("sports") == 'no')
@@ -824,7 +839,7 @@ def salud(pdf, data):
     ], ["B", "", "B", "", "B", ""])
 
 def laboral(pdf, data):
-    section_title(pdf, "6. SITUACIÓN LABORAL")
+    section_title(pdf, "7. SITUACIÓN LABORAL")
 
     table_row_multiline(pdf, [190], [
         "Antes de ingresar a Comercial Yolanda Salazar a que se dedicaba (tiempo):"
@@ -954,11 +969,18 @@ def laboral(pdf, data):
         data.get("job_benefits", "")
     ], [""])
 
-def firmas(pdf):
+# ========== FIRMAS CON NOMBRES AUTOMÁTICOS ==========
+def firmas(pdf, data):
     check_page_space(pdf, 50)
-    section_title(pdf, "FIRMAS")
+    section_title(pdf, "8. FIRMAS")
     pdf.ln(10)
 
+    # Obtener nombre del entrevistado desde los datos
+    nombre_entrevistado = data.get("name", "")
+    # Nombre fijo del trabajador social (puedes cambiarlo)
+    nombre_trabajador_social = "Mgs. Ana Lucía Pérez"
+
+    # Líneas de firmas
     pdf.cell(90, 8, "_____________________________", 0, 0, "C")
     pdf.cell(10)
     pdf.cell(90, 8, "_____________________________", 0, 1, "C")
@@ -967,9 +989,10 @@ def firmas(pdf):
     pdf.cell(10)
     pdf.cell(90, 6, "Firma del trabajador social", 0, 1, "C")
 
-    pdf.cell(90, 6, "Nombre", 0, 0, "C")
+    # Nombres debajo de las firmas
+    pdf.cell(90, 6, nombre_entrevistado, 0, 0, "C")
     pdf.cell(10)
-    pdf.cell(90, 6, "Nombre ", 0, 1, "C")
+    pdf.cell(90, 6, nombre_trabajador_social, 0, 1, "C")
 
 
 # -----------------------------
@@ -1010,7 +1033,7 @@ def create_pdf(data):
     laboral(pdf, data)
     pdf.ln(3)
 
-    firmas(pdf)
+    firmas(pdf, data)
 
     os.makedirs("pdf", exist_ok=True)
 
