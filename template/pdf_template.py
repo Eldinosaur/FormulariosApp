@@ -76,7 +76,6 @@ def section_title(pdf, title):
 
 def table_row(pdf, widths, data, height=8):
 
-    # evita errores por desalineación
     if len(data) < len(widths):
         data = list(data) + [""] * (len(widths) - len(data))
 
@@ -87,7 +86,6 @@ def table_row(pdf, widths, data, height=8):
     
 def table_row_mixed(pdf, widths, data, styles, height=8):
 
-    # Ajuste por seguridad
     if len(data) < len(widths):
         data = list(data) + [""] * (len(widths) - len(data))
 
@@ -95,17 +93,15 @@ def table_row_mixed(pdf, widths, data, styles, height=8):
         styles = list(styles) + [""] * (len(widths) - len(styles))
 
     for i in range(len(widths)):
-
         pdf.set_font("Arial", styles[i], 10)
         pdf.cell(widths[i], height, str(data[i]), border=1)
 
     pdf.ln(height)
-
-    # Reset
     pdf.set_font("Arial", "", 10)
 
-# ========== FUNCIÓN MULTILÍNEA CORREGIDA ==========
+
 def table_row_multiline(pdf, widths, data, styles, line_height=5):
+    """Fila que maneja texto largo con saltos de línea automáticos"""
     if len(data) < len(widths):
         data = list(data) + [""] * (len(widths) - len(data))
 
@@ -157,6 +153,7 @@ def table_row_multiline(pdf, widths, data, styles, line_height=5):
     pdf.set_x(pdf.l_margin)
     pdf.set_font("Arial", "", 10)
 
+
 def check_page_space(pdf, space_needed):
     if pdf.get_y() + space_needed > 270:
         pdf.add_page()
@@ -167,36 +164,38 @@ def box(pdf, text, h=20):
 
 
 # -----------------------------
-# SECCIONES
+# SECCIONES - TODOS los campos usan table_row_multiline
 # -----------------------------
+
 def fecha_visita(pdf, data):
-    table_row_mixed(pdf, [40, 150], [
+    table_row_multiline(pdf, [40, 150], [
         "Fecha de Visita", data.get("visit_date", "")
     ], ["B", ""])
+
 
 def datos_personales(pdf, data):
 
     section_title(pdf, "1. DATOS PERSONALES DEL COLABORADOR")
 
-    table_row_mixed(pdf, [40, 150], [
+    table_row_multiline(pdf, [40, 150], [
         "Nombre", data.get("name", "")
-    ],["B",""])
+    ], ["B", ""])
 
-    table_row_mixed(pdf, [40, 55, 40, 55], [
+    table_row_multiline(pdf, [40, 55, 40, 55], [
         "Cédula", data.get("ci", ""),
         "Edad", data.get("age", "")
-    ],["B","","B",""])
+    ], ["B", "", "B", ""])
     
-    table_row_mixed(pdf,[80,110], [
+    table_row_multiline(pdf, [80, 110], [
         "Lugar y Fecha de Nacimiento", data.get("birth_date_place", "")
-    ],["B",""])
+    ], ["B", ""])
     
     masculino = checkbox(data.get("gender") == "masculino")
     femenino = checkbox(data.get("gender") == "femenino")
     otro = checkbox(data.get("gender") == "otro")   
-    table_row_mixed(pdf, [40, 150], [
+    table_row_multiline(pdf, [40, 150], [
         "Genero", f"{masculino} Masculino     {femenino} Femenino     {otro} Otro"
-    ],["B",""])
+    ], ["B", ""])
 
     casado = checkbox(data.get("marital_status") == "casado")
     soltero = checkbox(data.get("marital_status") == "soltero")
@@ -204,61 +203,58 @@ def datos_personales(pdf, data):
     divorciado = checkbox(data.get("marital_status") == "divorciado")
     unionlibre = checkbox(data.get("marital_status") == "unión libre")
     viudo = checkbox(data.get("marital_status") == "viudo")
-    table_row_mixed(pdf, [40, 150], [
+    table_row_multiline(pdf, [40, 150], [
         "Estado civil",
         f"{casado} Casado     {soltero} Soltero     {separado} Separado     {divorciado} Divorciado     {unionlibre} Unión Libre     {viudo} Viudo"
-    ],["B",""])
+    ], ["B", ""])
 
-    table_row_mixed(pdf, [40, 150], [
+    table_row_multiline(pdf, [40, 150], [
         "Email", data.get("email", "")
-    ],["B",""])
+    ], ["B", ""])
     
-    table_row_mixed(pdf, [40,50, 50, 50],[
+    table_row_multiline(pdf, [40, 50, 50, 50], [
         "Área de trabajo", data.get("work_area", ""), 
         "Puesto que desempeña", data.get("job_title", "")
-    ], ["B","","B",""])
+    ], ["B", "", "B", ""])
     
-    table_row_mixed(pdf, [55, 135],[
+    table_row_multiline(pdf, [55, 135], [
         "Fecha de Ingreso", data.get("entry_date", "")
-    ], ["B",""])
+    ], ["B", ""])
     
-    table_row_mixed(pdf, [55,15,25,35,40,20],[
+    table_row_multiline(pdf, [55, 15, 25, 35, 40, 20], [
         "Tiene alguna discapacidad", data.get("disability", ""),
         "Tipo", data.get("disability_type", ""),
         "Porcentaje", data.get("disability_percentage", "")
-    ],["B","","B","","B",""])
+    ], ["B", "", "B", "", "B", ""])
 
     profesional = checkbox(data.get("educational_level") == "profesional")
     bachiller = checkbox(data.get("educational_level") == "bachiller")
     basica = checkbox(data.get("educational_level") == "basica")
     primaria = checkbox(data.get("educational_level") == "primaria")
     nuloestudio = checkbox(data.get("educational_level") == "nuloestudio")
-    table_row_mixed(pdf, [40, 150], [
+    table_row_multiline(pdf, [40, 150], [
         "Nivel de Educación", 
         f"{profesional} Profesional     {bachiller} Bachiller     {basica} Básica     {primaria} Primaria     {nuloestudio} Sin Estudios"
-    ],["B",""])
+    ], ["B", ""])
     
-    # ========== CAMPO DE TEXTO LARGO: OBSERVACIONES EDUCACIÓN ==========
     table_row_multiline(pdf, [40, 150], [
         "Observaciones:", data.get("educational_observations", "")
     ], ["B", ""])
     
-    table_row_mixed(pdf, [50,15,30,35,30,30],[
+    table_row_multiline(pdf, [50, 15, 30, 35, 30, 30], [
         "¿Actualmente estudia?", data.get("currently_studying", ""),
         "Carrera", data.get("study_career", ""),
         "Nivel", data.get("study_level", "")
-    ],["B","","B","","B",""])
+    ], ["B", "", "B", "", "B", ""])
 
-    # ========== CAMPO DE TEXTO LARGO: DIRECCIÓN ==========
     table_row_multiline(pdf, [40, 150], [
         "Dirección Domiciliaria", data.get("address", "")
     ], ["B", ""])
     
-    table_row_mixed(pdf, [40, 150], [
+    table_row_multiline(pdf, [40, 150], [
         "Teléfono", data.get("phone", "")
-    ],["B",""])
+    ], ["B", ""])
 
-    # ========== CAMPO DE TEXTO LARGO: CONTACTO EMERGENCIA ==========
     table_row_multiline(pdf, [60, 130], [
         "Contacto de emergencia", data.get("emergency_contact", "")
     ], ["B", ""])
@@ -267,14 +263,14 @@ def datos_personales(pdf, data):
 def miembros_hogar(pdf, data):
 
     section_title(pdf, "2. MIEMBROS DEL HOGAR")
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Célula Social - Composición Familiar del Colaborador (viven dentro del hogar)"
-    ],["B"])
+    ], ["B"])
 
-    headers = ["N°","Nombre", "Edad", "Parentesco", "Ocupación", "Ingreso"]
-    widths = [10,50, 20, 40, 40, 30]
+    headers = ["N°", "Nombre", "Edad", "Parentesco", "Ocupación", "Ingreso"]
+    widths = [10, 50, 20, 40, 40, 30]
 
-    table_row_mixed(pdf, widths, headers,["B","B","B","B","B","B"])
+    table_row_multiline(pdf, widths, headers, ["B", "B", "B", "B", "B", "B"])
 
     miembros = data.get("family_members", [])
 
@@ -332,9 +328,9 @@ def miembros_hogar(pdf, data):
 
 def info_familia(pdf, data):
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Información de la Familia:"
-    ],["B"])
+    ], ["B"])
 
     nuclear = checkbox(data.get("family_type") == "nuclear")
     cosanguinea = checkbox(data.get("family_type") == "cosanguinea")
@@ -351,64 +347,60 @@ def info_familia(pdf, data):
 
     siotroshijos = checkbox(data.get("children_outside_marriage") == "si")
     nootroshijos = checkbox(data.get("children_outside_marriage") == "no")
-    table_row_mixed(pdf, [60,30,60,40],[
+    table_row_multiline(pdf, [60, 30, 60, 40], [
         "N° Hijos del colaborador", data.get("children_count", ""),
         "Existen hijos fuera del Matrimonio", f"{siotroshijos} Sí     {nootroshijos} No"
-    ],["B","","B",""])
+    ], ["B", "", "B", ""])
     
-    table_row_mixed(pdf, [60,130],[
+    table_row_multiline(pdf, [60, 130], [
         "Paga pensión alimenticia", data.get("pays_alimony", "")
-    ],["B",""])
+    ], ["B", ""])
     
-    table_row_mixed(pdf, [70,120],[
+    table_row_multiline(pdf, [70, 120], [
         "N° de Matrimonio o Relación Actual", data.get("marriage_number", "")
-    ],["B",""])
+    ], ["B", ""])
     
-    table_row_mixed(pdf, [110,80],[
+    table_row_multiline(pdf, [110, 80], [
         "Comparte con su familia tiempo de descanso y recreación", data.get("family_time", "")
-    ],["B",""])
+    ], ["B", ""])
     
-    table_row_mixed(pdf, [40,150],[
+    table_row_multiline(pdf, [40, 150], [
         "Frecuencia", data.get("family_time_frequency", "")
-    ],["B",""])
+    ], ["B", ""])
     
-    # ========== CAMPO DE TEXTO LARGO: ACTIVIDADES ==========
     table_row_multiline(pdf, [40, 150], [
         "Actividades:", data.get("family_activities", "")
     ], ["B", ""])
     
-    # ========== CAMPO DE TEXTO LARGO: OTRAS ACTIVIDADES ==========
     table_row_multiline(pdf, [80, 110], [
         "Qué actividades realiza\nfuera de su jornada laboral:", data.get("other_activities", " ")
     ], ["B", ""])
     
     otrasactividades = checkbox(data.get("other_activities") == "si")
     nootrasactividades = checkbox(data.get("other_activities") == "no")
-    table_row_mixed(pdf, [75,25,40,50],[
+    table_row_multiline(pdf, [75, 25, 40, 50], [
         "En su domicilio realiza otras actividades:",
         f"{otrasactividades} Sí     {nootrasactividades} No",
         "Especificar:", data.get("other_activities_specify", "")
-    ],["B","", "B",""])
+    ], ["B", "", "B", ""])
     
-    # ========== CAMPO DE TEXTO LARGO: HOBBIES ==========
     table_row_multiline(pdf, [75, 115], [
         "Describa cuales son sus hobbies:", data.get("hobbies", "")
     ], ["B", ""])
     
-    table_row_mixed(pdf, [75,115],[
+    table_row_multiline(pdf, [75, 115], [
         "Que tiempo le dedica a sus hobbies:", data.get("hobbies_time", "")
-    ],["B",""])
+    ], ["B", ""])
 
     muybuenarelacionpareja = checkbox(data.get("partner_relationship") == "muy buena")
     buena = checkbox(data.get("partner_relationship") == "buena")
     regular = checkbox(data.get("partner_relationship") == "regular")
     mala = checkbox(data.get("partner_relationship") == "mala")
-    table_row_mixed(pdf, [90,100],[
+    table_row_multiline(pdf, [90, 100], [
         "Como califica la relación de pareja:",
         f"{muybuenarelacionpareja} Muy buena     {buena} Buena     {regular} Regular     {mala} Mala"
-    ],["B",""])
+    ], ["B", ""])
     
-    # ========== CAMPO DE TEXTO LARGO: POR QUÉ RELACIÓN PAREJA ==========
     table_row_multiline(pdf, [40, 150], [
         "¿Por qué?", data.get("partner_relationship_reason", "")
     ], ["B", ""])
@@ -417,12 +409,11 @@ def info_familia(pdf, data):
     buena = checkbox(data.get("children_relationship") == "buena")
     regular = checkbox(data.get("children_relationship") == "regular")
     mala = checkbox(data.get("children_relationship") == "mala")
-    table_row_mixed(pdf, [90,100],[
+    table_row_multiline(pdf, [90, 100], [
         "Como califica la relación con los hijos:",
         f"{muybuenarelacionhijos} Muy buena     {buena} Buena     {regular} Regular     {mala} Mala"
-    ],["B",""])
+    ], ["B", ""])
     
-    # ========== CAMPO DE TEXTO LARGO: POR QUÉ RELACIÓN HIJOS ==========
     table_row_multiline(pdf, [40, 150], [
         "¿Por qué?", data.get("children_relationship_reason", "")
     ], ["B", ""])
@@ -432,27 +423,26 @@ def info_familia(pdf, data):
     resentimientos = checkbox(data.get("family_problems") == "resentimientos")
     otros = checkbox(data.get("family_problems") == "otros")
     ningunos = checkbox(data.get("family_problems") == "ningunos")
-    table_row_mixed(pdf, [40,150],[
+    table_row_multiline(pdf, [40, 150], [
         "Problemas familiares:",
         f"{divorcios} Divorcios     {separaciones} Separaciones     {resentimientos} Resentimientos     {otros} Otros     {ningunos} Ninguno"
-    ],["B",""])
+    ], ["B", ""])
     
-    # ========== CAMPO DE TEXTO LARGO: AYUDA RECIBIDA ==========
     table_row_multiline(pdf, [40, 150], [
         "Recibio ayuda", data.get("family_problems_help", "")
     ], ["B", ""])
     
     sisalieronpais = checkbox(data.get("family_migration") == "si")
     nosalieronpais = checkbox(data.get("family_migration") == "no")
-    table_row_mixed(pdf, [90,100],[
+    table_row_multiline(pdf, [90, 100], [
         "Miembros del hogar que salieron del país:", f"{sisalieronpais} Sí     {nosalieronpais} No"
-    ],["B",""])
+    ], ["B", ""])
 
     sirecibedinero = checkbox(data.get("family_migration_received", "") == "si")
     nosirecibedinero = checkbox(data.get("family_migration_received", "") == "no")
-    table_row_mixed(pdf, [90,100],[
+    table_row_multiline(pdf, [90, 100], [
         "Recibió dinero del exterior:", f"{sirecibedinero} Sí     {nosirecibedinero} No"
-    ],["B",""])
+    ], ["B", ""])
 
 
 def vivienda(pdf, data):
@@ -462,52 +452,51 @@ def vivienda(pdf, data):
     urbano = checkbox(data.get("sector") == "urbano")
     rural = checkbox(data.get("sector") == "rural")
 
-    table_row_mixed(pdf, [50, 140], [
+    table_row_multiline(pdf, [50, 140], [
         "Sector",
         f"{urbano} Urbano     {rural} Rural"
-    ],["B",""])
+    ], ["B", ""])
     
     propia = checkbox(data.get("house_ownership") == "propia")
     arrendada = checkbox(data.get("house_ownership") == "arrendada")
     hipotecada = checkbox(data.get("house_ownership") == "hipotecada")
     prestada = checkbox(data.get("house_ownership") == "prestada")
     otros = checkbox(data.get("house_ownership") == "otros")
-    table_row(pdf,[190],[
+    table_row_multiline(pdf, [190], [
         f"{propia} Propia     {arrendada} Arrendada     {hipotecada} Hipotecada     {prestada} Prestada     {otros} Otros"
-    ])
+    ], [""])
     
-    table_row_mixed(pdf, [30,20,50,30,40,20], [
+    table_row_multiline(pdf, [30, 20, 50, 30, 40, 20], [
         "N° habitantes", data.get("household_size", ""),
         "Que tiempo vive en el sector", data.get("time_living_sector", ""),
         "Se considera seguro", data.get("is_safe", "")
-    ],["B","","B","","B",""])
+    ], ["B", "", "B", "", "B", ""])
 
     casa = checkbox(data.get("house_type") == "casa")
     departamento = checkbox(data.get("house_type") == "departamento")
     cuarto = checkbox(data.get("house_type") == "cuarto")
     mediagua = checkbox(data.get("house_type") == "mediagua")
-    table_row_mixed(pdf,[50, 140],[
+    table_row_multiline(pdf, [50, 140], [
         "Tipo de vivienda",
         f"{casa} Casa     {departamento} Departamento     {cuarto} Cuarto     {mediagua} Mediagua"
-    ],["B",""])
+    ], ["B", ""])
     
     precaria = checkbox(data.get("house_class") == "precaria")
     elemental = checkbox(data.get("house_class") == "elemental")
     completa = checkbox(data.get("house_class") == "completa")
-    table_row_mixed(pdf,[50, 140],[
+    table_row_multiline(pdf, [50, 140], [
         "Clase de vivienda",
         f"{precaria} Precaria     {elemental} Elemental     {completa} Completa"
-    ],["B",""])
+    ], ["B", ""])
     
-    table_row_mixed(pdf,[50, 140],[
+    table_row_multiline(pdf, [50, 140], [
         "Avaluo de casa:",
         data.get("house_valuation", "")
-    ],["B",""])
+    ], ["B", ""])
     
     posesion = checkbox(data.get("house_possession") == "si")
     no_posesion = checkbox(data.get("house_possession") == "no")
     
-    # ========== CAMPO DE TEXTO LARGO: OBSERVACIONES VIVIENDA ==========
     table_row_multiline(pdf, [50, 30, 20, 20, 30, 40], [
         "¿Posee la vivienda?",
         f"{posesion} Sí     {no_posesion} No",
@@ -517,9 +506,9 @@ def vivienda(pdf, data):
         data.get("house_observations", "")
     ], ["B", "", "B", "", "B", ""])
     
-    table_row_mixed(pdf,[190],[
+    table_row_multiline(pdf, [190], [
         "Distribucion de la vivienda"
-    ],["B"])
+    ], ["B"])
     
     dormitorio = checkbox(data.get("house_distribution") == "dormitorio")
     camas = checkbox(data.get("house_distribution") == "camas")
@@ -536,11 +525,11 @@ def vivienda(pdf, data):
         f"{dormitorio} Dormitorio     {camas} Camas     {cocina} Cocina     "
         f"{comedor} Comedor     {sala} Sala     \n{bano} Baño     {patio} Patio     " 
         f"{jardin} Jardín     {terraza} Terraza     {garaje} Garaje"
-    ],[""])
+    ], [""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Techo o cubierta"
-    ],["B"])
+    ], ["B"])
     
     loza = checkbox(data.get("roof_type") == "loza")
     eternit = checkbox(data.get("roof_type") == "eternit")
@@ -551,10 +540,10 @@ def vivienda(pdf, data):
     regular_techo = checkbox(data.get("roof_status") == "regular")
     malo_techo = checkbox(data.get("roof_status") == "malo")
     
-    table_row_multiline(pdf, [95,95], [
+    table_row_multiline(pdf, [95, 95], [
         f"{loza} Loza     \n{eternit} Eternit     \n{zinc} Zinc     \n{teja} Teja     \n{plastico} Plástico     \nOtros:{data.get("roof_type_other", "")}", 
         f"Estado:   \n\n{bueno_techo} Bueno     \n{regular_techo} Regular     \n{malo_techo} Malo       \n      "
-    ],["", ""])
+    ], ["", ""])
 
     hormigon = checkbox(data.get("wall_type") == "hormigon")
     bloque = checkbox(data.get("wall_type") == "bloque")
@@ -564,18 +553,18 @@ def vivienda(pdf, data):
     regular_pared = checkbox(data.get("wall_status") == "regular")
     malo_pared = checkbox(data.get("wall_status") == "malo")
     
-    table_row_mixed(pdf,[190],[
+    table_row_multiline(pdf, [190], [
         "Tipo de pared"
-    ],["B"])
+    ], ["B"])
     
-    table_row_multiline(pdf, [95,95], [
+    table_row_multiline(pdf, [95, 95], [
         f"{hormigon} Hormigón     \n{bloque} Bloque     \n{adobe} Adobe     \n{madera} Madera     \nOtros:{data.get("wall_type_other", "")}",
         f"Estado:   \n{bueno_pared} Bueno     \n{regular_pared} Regular     \n{malo_pared} Malo       \n      "
-    ],["", ""])
+    ], ["", ""])
     
-    table_row_mixed(pdf,[190],[
+    table_row_multiline(pdf, [190], [
         "Tipo de piso"
-    ],["B"])
+    ], ["B"])
     
     entablado = checkbox(data.get("floor_type") == "entablado")
     baldosa = checkbox(data.get("floor_type") == "baldosa")
@@ -585,14 +574,14 @@ def vivienda(pdf, data):
     regular_piso = checkbox(data.get("floor_status") == "regular")
     malo_piso = checkbox(data.get("floor_status") == "malo")
 
-    table_row_multiline(pdf, [95,95], [
+    table_row_multiline(pdf, [95, 95], [
         f"{entablado} Entablado     \n{baldosa} Baldosa     \n{cemento} Cemento     \n{tierra} Tierra     \nOtros:{data.get("floor_type_other", "")}",
         f"Estado:   \n{bueno_piso} Bueno     \n{regular_piso} Regular     \n{malo_piso} Malo       \n      "
-    ],["", ""])
+    ], ["", ""])
 
-    table_row_mixed(pdf,[190],[
+    table_row_multiline(pdf, [190], [
         "Tipo de estructura"
-    ],["B"])
+    ], ["B"])
     
     hormigon_est = checkbox(data.get("structure_type") == "hormigon")
     hierro = checkbox(data.get("structure_type") == "hierro")
@@ -602,14 +591,14 @@ def vivienda(pdf, data):
     regular_estructura = checkbox(data.get("structure_status") == "regular")
     malo_estructura = checkbox(data.get("structure_status") == "malo")
 
-    table_row_multiline(pdf, [95,95], [
+    table_row_multiline(pdf, [95, 95], [
         f"{hormigon_est} Hormigón     \n{hierro} Hierro     \n{madera_est} Madera     \n{bloque_est} Bloque     \nOtros:{data.get("structure_type_other", "")}",
         f"Estado:   \n{bueno_estructura} Bueno     \n{regular_estructura} Regular     \n{malo_estructura} Malo       \n      "
-    ],["", ""])
+    ], ["", ""])
     
-    table_row_mixed(pdf,[190],[
+    table_row_multiline(pdf, [190], [
         "Servicios básicos"
-    ],["B"])
+    ], ["B"])
     
     # Agua
     potable = checkbox(data.get("water_type") == "potable")
@@ -617,19 +606,19 @@ def vivienda(pdf, data):
     vertiente = checkbox(data.get("water_type") == "vertiente")
     repartidor = checkbox(data.get("water_type") == "repartidor")
     sequia = checkbox(data.get("water_type") == "sequia")
-    table_row_mixed(pdf, [30,160], [
+    table_row_multiline(pdf, [30, 160], [
         "Agua",
         f"{potable} Potable     {cisterna} Cisterna     {vertiente} Vertiente     {repartidor} Repartidor     {sequia} Sequía"
-    ],["B", ""])
+    ], ["B", ""])
     
     # Luz
     permanente = checkbox(data.get("light_type") == "permanente")
     temporal = checkbox(data.get("light_type") == "temporal")
     noenergia = checkbox(data.get("light_type") == "noenergia")
-    table_row_mixed(pdf, [30,160], [
+    table_row_multiline(pdf, [30, 160], [
         "Luz",
         f"{permanente} Permanente     {temporal} Temporal     {noenergia} No Energía"
-    ],["B", ""])
+    ], ["B", ""])
     
     # SSHH
     sshhpropio = checkbox(data.get("sshh_type") == "propio")
@@ -637,24 +626,22 @@ def vivienda(pdf, data):
     sshhpozo = checkbox(data.get("sshh_type") == "pozo")
     sshhlibre = checkbox(data.get("sshh_type") == "libre")
 
-    table_row_multiline(pdf, [30,160], [
+    table_row_multiline(pdf, [30, 160], [
         "SSHH",
         f"{sshhpropio} Propio     {sshhcompartido} Compartido     {sshhpozo} Pozo     {sshhlibre} Libre",
-    ],["B", ""])
+    ], ["B", ""])
     
-    # ========== CAMPO DE TEXTO LARGO: OBSERVACIONES SSHH ==========
     table_row_multiline(pdf, [30, 160], [
         "Observaciones:", data.get("basic_services_other", "")
     ], ["B", ""])
     
     sihacinamiento = checkbox(data.get("hacinamiento") == "si")
     no_hacinamiento = checkbox(data.get("hacinamiento") == "no")
-    table_row_mixed(pdf, [30,160], [
+    table_row_multiline(pdf, [30, 160], [
         "Hacinamiento",
         f"{sihacinamiento} Sí     {no_hacinamiento} No"
-    ],["B", ""])
+    ], ["B", ""])
     
-    # ========== CAMPO DE TEXTO LARGO: MANEJO DE DESECHOS ==========
     table_row_multiline(pdf, [50, 140], [
         "Manejo de desechos", data.get("waste_management", "")
     ], ["B", ""])
@@ -662,53 +649,51 @@ def vivienda(pdf, data):
     transportepublico = checkbox(data.get("transport_type") == "publico")
     transporteempresa = checkbox(data.get("transport_type") == "empresa")
     transporteprivado = checkbox(data.get("transport_type") == "privado")
-    table_row_mixed(pdf, [30,160], [
+    table_row_multiline(pdf, [30, 160], [
         "Transporte",
         f"{transportepublico} Público     {transporteempresa} Empresa     {transporteprivado} Privado     Otro: {data.get("transport_type_other", "")}"
-    ],["B", ""])
+    ], ["B", ""])
     
-    # ========== CAMPO DE TEXTO LARGO: ELECTRODOMESTICOS ==========
     table_row_multiline(pdf, [60, 130], [
         "Que electrodomesticos posee:", data.get("appliances", "")
     ], ["B", ""])
     
     si_internet = checkbox(data.get("internet") == "si")
     no_internet = checkbox(data.get("internet") == "no")
-    table_row_mixed(pdf, [60,130], [
+    table_row_multiline(pdf, [60, 130], [
         "Dispone de servicio de Internet",
         f"{si_internet} Sí     {no_internet} No"
-    ],["B", ""])
+    ], ["B", ""])
     
     recarga = checkbox(data.get("internet_type") == "recarga")
     mensual = checkbox(data.get("internet_type") == "mensual")
     satelital = checkbox(data.get("internet_type") == "satelital")
     fibraoptica = checkbox(data.get("internet_type") == "fibraoptica")
-    table_row_mixed(pdf, [60,130], [
+    table_row_multiline(pdf, [60, 130], [
         "Tipo de Internet",
         f"{recarga} Recarga     {mensual} Mensual     {satelital} Satelital     {fibraoptica} Fibra Óptica"
-    ],["B", ""])
+    ], ["B", ""])
     
     sianimales = checkbox(data.get("animals") == "si")
     no_sianimales = checkbox(data.get("animals") == "no")
-    table_row_mixed(pdf, [40,30, 30,40,30,20], [
+    table_row_multiline(pdf, [40, 30, 30, 40, 30, 20], [
         "Tiene animales",
         f"{sianimales} Sí     {no_sianimales} No",
         "Tipo",
         f"{data.get('animal_type', '')}",
         "Cantidad",
         data.get('animal_quantity', '')
-    ],["B", ""])
+    ], ["B", "", "", "", "", ""])
     
     si_peste = checkbox(data.get("peste") == "si")
     no_peste = checkbox(data.get("peste") == "no")
-    table_row_mixed(pdf, [40,30,75,45], [
+    table_row_multiline(pdf, [40, 30, 75, 45], [
         "Zona de peste",
         f"{si_peste} Sí     {no_peste} No",
         "Lugar de tenencia (dentro o fuera del hogar)",
         f"{data.get('animal_location', '')}"
-    ],["B", ""])
+    ], ["B", "", "B", ""])
     
-    # ========== CAMPO DE TEXTO LARGO: OBSERVACIONES ANIMALES ==========
     table_row_multiline(pdf, [50, 140], [
         "Observaciones:", data.get('animal_observations', '')
     ], ["B", ""])
@@ -720,34 +705,33 @@ def economia(pdf, data):
 
     gastos_compartidos = checkbox(data.get("shared_expenses") == "si")
     gastos_no_compartidos = checkbox(data.get("shared_expenses") == "no")
-    table_row_mixed(pdf, [100, 90], [
+    table_row_multiline(pdf, [100, 90], [
         "Los gastos en el hogar son compartidos",
         f"{gastos_compartidos} Sí     {gastos_no_compartidos} No"
-    ],["B", ""])
+    ], ["B", ""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Personas que aportan economicamente"
-    ],["B"])
+    ], ["B"])
     
-    table_row_multiline(pdf, [95,95], [
+    table_row_multiline(pdf, [95, 95], [
         f"Padre: \nMadre: \nHermanos: \nColaborador: \nConyuge: \nHijos: \nOtros:",
         f"${data.get('father_contribution', '')} \n${data.get('mother_contribution', '')} \n${data.get('siblings_contribution', '')} \n${data.get('collaborators_contribution', '')} \n${data.get('spouse_contribution', '')} \n${data.get('children_contribution', '')} \n${data.get('other_contribution', '')}"   
-    ],["B", ""])
+    ], ["B", ""])
     
-    table_row_mixed(pdf, [95, 95], [
-        "TOTAL:",
-        f"${data.get('total_contribution', '')}"
-    ],["B", ""])
+    table_row_multiline(pdf, [95, 95], [
+        "TOTAL:", f"${data.get('total_contribution', '')}"
+    ], ["B", ""])
     
-    table_row_mixed(pdf, [95, 95], [
+    table_row_multiline(pdf, [95, 95], [
         "Monto de deudas:", f"${data.get('debt_amount', '')}"
-    ],["B", ""])
+    ], ["B", ""])
     
     prestamos_formales = checkbox(data.get("formal_loans"))
-    table_row_mixed(pdf, [95, 95], [
+    table_row_multiline(pdf, [95, 95], [
         f"Prestamos: {prestamos_formales} Formales",
         f"${data.get('formal_loans_amount', '')}"
-    ],["B", ""])
+    ], ["B", ""])
     
     prestamos_informales = checkbox(data.get("informal_loans"))
     table_row_multiline(pdf, [95, 95], [
@@ -759,18 +743,18 @@ def economia(pdf, data):
         f"\n${data.get('informal_loans_family_amount', '')}"
         f"\n${data.get('informal_loans_moneylender_amount', '')}"
         f"\n\n${data.get('informal_loans_other_amount', '')}"
-    ],["B", ""])
+    ], ["B", ""])
     
     sitarjetas = checkbox(data.get("credit_cards") == 'si')
     notarjetas = checkbox(data.get("credit_cards") == 'no')
-    table_row_mixed(pdf, [95, 95], [
+    table_row_multiline(pdf, [95, 95], [
         "Posee tarjetas de crédito?",
         f"{sitarjetas} Sí     {notarjetas} No"
-    ],["B", ""])
+    ], ["B", ""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Gastos"
-    ],["B"])
+    ], ["B"])
     
     table_row_multiline(pdf, [95, 95], [
         f"Alimentación:\n"
@@ -807,48 +791,47 @@ def economia(pdf, data):
         f"${data.get("commercial_properties_support", "")}\n"
         f"${data.get("financial_support_others", "")}\n"
         f"${data.get("other_expenses_support", "")}\n"
-    ],["B", ""])
+    ], ["B", ""])
     
-    table_row_mixed(pdf, [95, 95], [    
-        "TOTAL GASTOS:",
-        f"${data.get("total_expenses", "")}"
-    ],["B", ""])
+    table_row_multiline(pdf, [95, 95], [    
+        "TOTAL GASTOS:", f"${data.get("total_expenses", "")}"
+    ], ["B", ""])
     
     sitransporte = checkbox(data.get("transportation") == 'si')
     notransporte = checkbox(data.get("transportation") == 'no')
-    table_row_mixed(pdf, [95, 95], [
+    table_row_multiline(pdf, [95, 95], [
         "Posee vehiculo o algun medio de transporte",
         f"{sitransporte} Sí     {notransporte} No"
-    ],["B", ""])
+    ], ["B", ""])
     
-    # ========== CAMPO DE TEXTO LARGO: DESCRIPCION TRANSPORTE ==========
     table_row_multiline(pdf, [50, 140], [
         "Descripcion", data.get("transportation_description", "")
     ], ["B", ""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Actividad económica adicional (ingresos, horario en que labora):"        
-    ],["B"])
+    ], ["B"])
     
-    # ========== CAMPO DE TEXTO LARGO: ACTIVIDAD ECONÓMICA ADICIONAL ==========
     table_row_multiline(pdf, [190], [
         data.get("additional_economic_activity", "")
     ], [""])
 
     si_crianza_animales = checkbox(data.get("animal_breeding") == 'si')
     no_crianza_animales = checkbox(data.get("animal_breeding") == 'no')
-    table_row_mixed(pdf, [90,100], [
+    table_row_multiline(pdf, [90, 100], [
         "Se dedica a la crianza de animales?",
         f"{si_crianza_animales} Sí     {no_crianza_animales} No"
-    ],["B", ""])
+    ], ["B", ""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Resumen de la actividad economica de la familia"
-    ],["B"])
+    ], ["B"])
     
-    table_row_mixed(pdf, [35,30,35,30,30,30], [
-        "Ingresos:", data.get("total_income", ""), "Egresos:", data.get("total_expenses", ""), "Saldo:", data.get("balance", "")
-    ],["B", "","B", "","B", ""])
+    table_row_multiline(pdf, [35, 30, 35, 30, 30, 30], [
+        "Ingresos:", data.get("total_income", ""), 
+        "Egresos:", data.get("total_expenses", ""), 
+        "Saldo:", data.get("balance", "")
+    ], ["B", "", "B", "", "B", ""])
 
 
 def salud(pdf, data):
@@ -858,195 +841,176 @@ def salud(pdf, data):
     practica_deporte = checkbox(data.get("sports") == 'si')
     no_practica_deporte = checkbox(data.get("sports") == 'no')
 
-    table_row_mixed(pdf, [120,70], [
+    table_row_multiline(pdf, [120, 70], [
         "¿El colaborador practica algun deporte o actividad física?",
         f"{practica_deporte} Sí     {no_practica_deporte} No"
-    ],["B", ""])
+    ], ["B", ""])
     
-    # ========== CAMPO DE TEXTO LARGO: DEPORTE ==========
     table_row_multiline(pdf, [50, 140], [
         "¿Cual?", data.get("sports_description", "")
     ], ["B", ""])
     
-    table_row_mixed(pdf, [50,140], [
+    table_row_multiline(pdf, [50, 140], [
         "¿Con que frecuencia?", data.get("sports_frequency", "")
-    ],["B", ""])
+    ], ["B", ""])
     
-    # ========== CAMPO DE TEXTO LARGO: ENFERMEDAD ==========
     table_row_multiline(pdf, [90, 100], [
         "¿El colaborador tiene alguna enfermedad?", data.get("disease", "")
     ], ["B", ""])
     
     familiar_problemas_salud = checkbox(data.get("family_health_problems") == 'si')
     no_familiar_problemas_salud = checkbox(data.get("family_health_problems") == 'no')
-    table_row_mixed(pdf, [120,70], [
+    table_row_multiline(pdf, [120, 70], [
         "¿La familia tiene problemas de salud?",
         f"{familiar_problemas_salud} Sí     {no_familiar_problemas_salud} No"
-    ],["B", ""])
+    ], ["B", ""])
     
-    # ========== CAMPO DE TEXTO LARGO: PROBLEMAS SALUD ==========
     table_row_multiline(pdf, [50, 140], [
         "¿Cual?", data.get("family_health_problems_description", "")
     ], ["B", ""])
     
     familiar_discapacidad = checkbox(data.get("family_disability") == 'si')
     no_familiar_discapacidad = checkbox(data.get("family_disability") == 'no')
-    table_row_mixed(pdf, [120,70], [
+    table_row_multiline(pdf, [120, 70], [
         "¿La familia tiene algún tipo de discapacidad?",
         f"{familiar_discapacidad} Sí     {no_familiar_discapacidad} No"
-    ],["B", ""])
+    ], ["B", ""])
     
-    table_row_mixed(pdf, [30,30,35,30,35,30], [
+    table_row_multiline(pdf, [30, 30, 35, 30, 35, 30], [
         "Tipo:", f"{data.get("family_disability_type", "")}",
         "Porcentaje:", f"{data.get("family_disability_percentage", "")}",
         "Parentezco:", f"{data.get("family_disability_relationship", "")}"
-    ],["B", "","B", "","B", ""])
+    ], ["B", "", "B", "", "B", ""])
     
 
-def laboral(pdf,data):
+def laboral(pdf, data):
 
     section_title(pdf, "6. SITUACIÓN LABORAL")
 
-    table_row_mixed(pdf, [190], [
-       "Antes de ingresar a Comercial Yolanda Salazar  a que se dedicaba (tiempo):"
-   ],["B"])
+    table_row_multiline(pdf, [190], [
+        "Antes de ingresar a Comercial Yolanda Salazar a que se dedicaba (tiempo):"
+    ], ["B"])
     
-    # ========== CAMPO DE TEXTO LARGO: OCUPACIÓN ANTERIOR ==========
     table_row_multiline(pdf, [190], [
         data.get("previous_occupation", "")
     ], [""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Funciones que desempeña actualmente:"
-    ],["B"])
+    ], ["B"])
     
-    # ========== CAMPO DE TEXTO LARGO: FUNCIONES ACTUALES ==========
     table_row_multiline(pdf, [190], [
         data.get("current_functions", "")
     ], [""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Cree que su trabajo se relaciona con su formación, habilidades y experiencia:"
-    ],["B"])
+    ], ["B"])
     
-    # ========== CAMPO DE TEXTO LARGO: RELACIÓN TRABAJO ==========
     table_row_multiline(pdf, [190], [
         data.get("job_relation", "")
     ], [""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Como es la relación con sus compañeros, suelen compartir experiencias y conocimientos:"
-    ],["B"])
+    ], ["B"])
     
-    # ========== CAMPO DE TEXTO LARGO: RELACIÓN COMPAÑEROS ==========
     table_row_multiline(pdf, [190], [
         data.get("colleague_relationship", "")
     ], [""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Que podría mejorar:",
-    ],["B"])
+    ], ["B"])
     
-    # ========== CAMPO DE TEXTO LARGO: MEJORAS ==========
     table_row_multiline(pdf, [190], [
         data.get("improvement_suggestions", "")
     ], [""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Los conflictos en su área se resuelven de forma abierta y eficaz:"
-    ],["B"])
+    ], ["B"])
     
-    # ========== CAMPO DE TEXTO LARGO: RESOLUCIÓN CONFLICTOS ==========
     table_row_multiline(pdf, [190], [
         data.get("conflict_resolution", "")
     ], [""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Su trabajo es desgastante:"
-    ],["B", ""])
+    ], ["B"])
     
-    # ========== CAMPO DE TEXTO LARGO: DESGASTE ==========
     table_row_multiline(pdf, [190], [
         data.get("job_exhaustion", "")
     ], [""])
     
-    table_row_mixed(pdf,[190], [
+    table_row_multiline(pdf, [190], [
         "Siente presión laboral",
-    ],["B"])
+    ], ["B"])
     
-    # ========== CAMPO DE TEXTO LARGO: PRESIÓN ==========
     table_row_multiline(pdf, [190], [
         data.get("job_pressure", "")
     ], [""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Le genera estrés:",
-    ],["B"])
+    ], ["B"])
     
-    # ========== CAMPO DE TEXTO LARGO: ESTRÉS ==========
     table_row_multiline(pdf, [190], [
         data.get("job_stress", "")
     ], [""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Le alcanza el tiempo para estar al día en su trabajo:"
-    ],["B"])
+    ], ["B"])
     
-    # ========== CAMPO DE TEXTO LARGO: TIEMPO ==========
     table_row_multiline(pdf, [190], [
         data.get("job_time_management", "")
     ], [""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Le parece que su trabajo es reconocido por su jefe inmediato:"
-    ],["B"])
+    ], ["B"])
     
-    # ========== CAMPO DE TEXTO LARGO: RECONOCIMIENTO JEFE ==========
     table_row_multiline(pdf, [190], [
         data.get("job_manager_recognition", "")
     ], [""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Se siente reconocido con Comercial Yolanda Salazar:"
-    ],["B"])
+    ], ["B"])
     
-    # ========== CAMPO DE TEXTO LARGO: RECONOCIMIENTO EMPRESA ==========
     table_row_multiline(pdf, [190], [
         data.get("job_recognition", "")
     ], [""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Cuál es su proyección, su plan de vida o aspiraciones en Comercial Yolanda Salazar:"
-    ],["B"])
+    ], ["B"])
     
-    # ========== CAMPO DE TEXTO LARGO: PROYECCIÓN ==========
     table_row_multiline(pdf, [190], [
         data.get("job_projection", "")
     ], [""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Alguna vez, se ha sentido discriminado en su lugar de trabajo:"
-    ],["B"])
+    ], ["B"])
     
-    # ========== CAMPO DE TEXTO LARGO: DISCRIMINACIÓN ==========
     table_row_multiline(pdf, [190], [
         data.get("job_discrimination", "")
     ], [""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Qué haría para mejorar como trabajador:"
-    ],["B"])
+    ], ["B"])
     
-    # ========== CAMPO DE TEXTO LARGO: MEJORA PERSONAL ==========
     table_row_multiline(pdf, [190], [
         data.get("job_improvement", "")
     ], [""])
     
-    table_row_mixed(pdf, [190], [
+    table_row_multiline(pdf, [190], [
         "Que tipos de beneficios considera que Comercial Yolanda Salazar podría implementar:"
-    ],["B"])
+    ], ["B"])
     
-    # ========== CAMPO DE TEXTO LARGO: BENEFICIOS ==========
     table_row_multiline(pdf, [190], [
         data.get("job_benefits", "")
     ], [""])
