@@ -82,15 +82,15 @@ def table_row_mixed(pdf, widths, data, styles, height=8):
     pdf.ln(height)
     pdf.set_font("Arial", "", 10)
 
-# ========== FUNCIÓN MULTILÍNEA CORREGIDA ==========
+# ========== FUNCIÓN MULTILÍNEA MEJORADA PARA TEXTOS LARGOS ==========
 def table_row_multiline(pdf, widths, data, styles, line_height=5):
-    """Fila que maneja texto largo - TODAS las celdas tienen la MISMA altura"""
+    """Fila que maneja texto largo - MEJORADA para textos extensos sin cortes"""
     if len(data) < len(widths):
         data = list(data) + [""] * (len(widths) - len(data))
     if len(styles) < len(widths):
         styles = list(styles) + [""] * (len(widths) - len(styles))
 
-    # Calcular número de líneas REAL por celda
+    # Calcular número de líneas REAL por celda con mejor precisión
     line_counts = []
     pdf.set_font("Arial", "", 8)
 
@@ -102,28 +102,39 @@ def table_row_multiline(pdf, widths, data, styles, line_height=5):
             line_counts.append(1)
             continue
 
+        # Dividir por saltos de línea existentes
         lines = text.split("\n")
         total_lines = 0
+        
         for line in lines:
             if line.strip():
+                # Calcular cuántas líneas ocupa este texto
                 text_width = pdf.get_string_width(line)
-                lines_needed = max(1, int(text_width / (col_width - 3)) + 1)
+                # Margen de 4 puntos para evitar que se pegue al borde
+                available_width = col_width - 4
+                if available_width <= 0:
+                    lines_needed = 1
+                else:
+                    lines_needed = max(1, int(text_width / available_width) + 1)
                 total_lines += lines_needed
             else:
                 total_lines += 1
-        line_counts.append(max(1, total_lines))
+        
+        # Asegurar un mínimo de 1 línea, máximo 15 para no romper la página
+        line_counts.append(max(1, min(total_lines, 15)))
 
     # Altura MÁXIMA de la fila
     max_lines = max(line_counts)
     row_height = max_lines * line_height
 
+    # Verificar espacio en página
     if pdf.get_y() + row_height > pdf.page_break_trigger:
         pdf.add_page()
 
     x_start = pdf.get_x()
     y_start = pdf.get_y()
 
-    # Dibujar cada celda y luego rellenar hasta la altura máxima
+    # Dibujar cada celda
     for i in range(len(widths)):
         pdf.set_xy(x_start, y_start)
         pdf.set_font("Arial", styles[i], 8)
@@ -131,8 +142,14 @@ def table_row_multiline(pdf, widths, data, styles, line_height=5):
         # Guardar posición X actual
         x_current = pdf.get_x()
         
+        # Para textos muy largos, usar multi_cell con el ancho completo
+        text = str(data[i])
+        
+        # Configurar para que el texto se ajuste automáticamente
+        pdf.set_font("Arial", styles[i], 8)
+        
         # Dibujar el contenido de la celda SIN borde
-        pdf.multi_cell(widths[i], line_height, str(data[i]), border=0)
+        pdf.multi_cell(widths[i], line_height, text, border=0, align='L')
         
         # Dibujar el borde completo de la celda con la altura máxima
         pdf.rect(x_current, y_start, widths[i], row_height)
@@ -263,10 +280,12 @@ def miembros_hogar(pdf, data):
         "Célula Social - Composición Familiar del Colaborador (viven dentro del hogar)"
     ], ["B"])
 
-    headers = ["N°", "Nombre", "Edad", "Parentesco", "Ocupación", "Ingreso"]
-    widths = [10, 50, 20, 40, 40, 30]
+    # Anchos ajustados para mejor manejo de texto largo
+    headers = ["Nombres y Apellidos", "Edad", "Parentezco", "Estado Civil", "Instrucción", "Ocupación", "Lugar trabajo o estudio", "Ingresos", "Teléfono"]
+    widths = [38, 10, 18, 14, 18, 18, 24, 14, 36]  # Total: 190
+    line_height = 5.5  # Altura de línea ligeramente mayor para mejor legibilidad
 
-    table_row_multiline(pdf, widths, headers, ["B", "B", "B", "B", "B", "B"])
+    table_row_multiline(pdf, widths, headers, ["B", "B", "B", "B", "B", "B", "B", "B", "B"], line_height)
 
     miembros = data.get("family_members", [])
 
@@ -274,7 +293,7 @@ def miembros_hogar(pdf, data):
         table_row(pdf, [190], ["No se registran miembros del hogar"])
         return
 
-    for i, m in enumerate(miembros, start=1):
+    for m in miembros:
         ingreso = m.get("income", "")
         if ingreso:
             try:
@@ -282,14 +301,22 @@ def miembros_hogar(pdf, data):
             except:
                 ingreso = str(ingreso)
         
+        # Limpiar textos para evitar problemas
+        nombre = str(m.get("name", "")).strip()
+        if not nombre:
+            nombre = "-"
+            
         table_row_multiline(pdf, widths, [
-            str(i),
-            str(m.get("name", "")),
-            str(m.get("age", "")),
-            str(m.get("relation", "")),
-            str(m.get("job", "")),
-            ingreso
-        ], ["", "", "", "", "", ""])
+            nombre,
+            str(m.get("age", "")).strip() or "-",
+            str(m.get("relation", "")).strip() or "-",
+            str(m.get("marital_status", "")).strip() or "-",
+            str(m.get("education", "")).strip() or "-",
+            str(m.get("job", "")).strip() or "-",
+            str(m.get("work_or_study_place", "")).strip() or "-",
+            ingreso or "-",
+            str(m.get("phone", "")).strip() or "-"
+        ], ["", "", "", "", "", "", "", "", ""], line_height)
 
 def info_familia(pdf, data):
     section_title(pdf, "3. INFORMACIÓN DE LA FAMILIA")

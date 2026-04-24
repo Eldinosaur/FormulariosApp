@@ -12,7 +12,7 @@ class App:
 
         self.root = root
         self.root.title("Ficha Socioeconómica")
-        self.root.geometry("1300x850")
+        self.root.geometry("1400x850")
         self.root.configure(bg="#f0f2f5")
 
         self.entries = {}
@@ -320,14 +320,16 @@ class App:
             fg=self.colors["primary"], bg=self.colors["white"])
         self.family_counter_label.pack(side="left")
         
-        # Tabla de miembros
+        # Tabla de miembros - NUEVAS COLUMNAS
         table_frame = tk.Frame(s1, bg=self.colors["primary"])
         table_frame.pack(fill="x", pady=(0, 10))
         
-        headers = ["Nombre", "Edad", "Parentesco", "Ocupación", "Ingreso", ""]
+        headers = ["Nombres y Apellidos", "Edad", "Parentesco", "Estado Civil", "Instrucción", "Ocupación", "Lugar trabajo/estudio", "Ingreso", "Teléfono", ""]
+        widths = [18, 6, 10, 10, 10, 12, 14, 8, 10, 4]
+        
         for i, header in enumerate(headers):
-            tk.Label(table_frame, text=header, font=("Segoe UI", 9, "bold"),
-                    fg="white", bg=self.colors["primary"], width=12 if i < 5 else 4).grid(row=0, column=i, padx=2, pady=5)
+            tk.Label(table_frame, text=header, font=("Segoe UI", 8, "bold"),
+                    fg="white", bg=self.colors["primary"], width=widths[i], wraplength=100).grid(row=0, column=i, padx=2, pady=5)
         
         self.family_container = tk.Frame(s1, bg=self.colors["white"])
         self.family_container.pack(fill="x", pady=5)
@@ -667,7 +669,7 @@ class App:
             self.add_family_btn.config(text=f"+ Agregar familiar ({self.MAX_FAMILY_MEMBERS - count} disponibles)")
 
     def add_family(self):
-        """Agrega un miembro a la tabla familiar"""
+        """Agrega un miembro a la tabla familiar - MODIFICADO con nuevas columnas"""
         if len(self.family_rows) >= self.MAX_FAMILY_MEMBERS:
             messagebox.showwarning(
                 "Límite alcanzado", 
@@ -684,15 +686,24 @@ class App:
 
         entries = {}
         
-        fields = [("name", "Nombre", 18), ("age", "Edad", 8), 
-                  ("relation", "Parentesco", 15), ("job", "Ocupación", 18), 
-                  ("income", "Ingreso", 12)]
+        # NUEVOS CAMPOS: 9 campos ahora
+        fields = [
+            ("name", "Nombre", 18),
+            ("age", "Edad", 6),
+            ("relation", "Parentesco", 10),
+            ("marital_status", "Estado Civil", 10),
+            ("education", "Instrucción", 10),
+            ("job", "Ocupación", 12),
+            ("work_or_study_place", "Lugar trabajo/estudio", 14),
+            ("income", "Ingreso", 8),
+            ("phone", "Teléfono", 10)
+        ]
         
         for i, (key, label, width) in enumerate(fields):
-            tk.Label(frame, text=label, font=("Segoe UI", 9),
-                    bg=self.colors["white"], fg=self.colors["secondary"]).grid(row=0, column=i*2, padx=5, pady=5)
-            e = tk.Entry(frame, width=width, font=("Segoe UI", 10))
-            e.grid(row=0, column=i*2+1, padx=5, pady=5)
+            tk.Label(frame, text=label, font=("Segoe UI", 8),
+                    bg=self.colors["white"], fg=self.colors["secondary"]).grid(row=0, column=i*2, padx=3, pady=5)
+            e = tk.Entry(frame, width=width, font=("Segoe UI", 9))
+            e.grid(row=0, column=i*2+1, padx=3, pady=5)
             entries[key] = e
         
         def remove_family_member():
@@ -703,7 +714,7 @@ class App:
         tk.Button(frame, text="✖", command=remove_family_member,
                  bg=self.colors["danger"], fg="white",
                  font=("Segoe UI", 9, "bold"), width=3,
-                 relief="flat").grid(row=0, column=len(fields)*2, padx=10)
+                 relief="flat").grid(row=0, column=len(fields)*2, padx=5)
 
         self.family_rows.append(entries)
         self.update_family_counter()
@@ -750,7 +761,7 @@ class App:
         data["photo"] = self.photo_path.get()
         
         # =========================================================
-        # FILTRAR SOLO FILAS COMPLETAS DE FAMILIARES
+        # RECOLECTAR FAMILIARES CON NUEVOS CAMPOS
         # =========================================================
         family = []
         skipped_count = 0
@@ -779,11 +790,15 @@ class App:
                 "Filas omitidas", 
                 f"⚠️ Se omitieron {skipped_count} fila(s) de familiares porque estaban incompletas.\n\n"
                 "Para que un familiar se guarde correctamente, debe completar:\n"
-                "• Nombre\n"
+                "• Nombres y Apellidos\n"
                 "• Edad\n"
                 "• Parentesco\n"
+                "• Estado Civil\n"
+                "• Instrucción\n"
                 "• Ocupación\n"
-                "• Ingreso\n\n"
+                "• Lugar trabajo/estudio\n"
+                "• Ingreso\n"
+                "• Teléfono\n\n"
                 "Las filas vacías o incompletas no se incluirán en el PDF."
             )
         
@@ -810,5 +825,3 @@ class App:
             
         except Exception as e:
             messagebox.showerror("Error", f"❌ Error al guardar: {str(e)}")
-
-
