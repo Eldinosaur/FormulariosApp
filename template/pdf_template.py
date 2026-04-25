@@ -55,6 +55,17 @@ def fix_image_orientation(image_path):
 def checkbox(value):
     return "[X]" if value else "[ ]"
 
+def format_money(value):
+    """Formatea un valor monetario. Si es 0 muestra '0', si no muestra $XX.XX"""
+    try:
+        num = float(value) if value else 0
+        if num == 0:
+            return "0"
+        else:
+            return f"${num:,.2f}"
+    except:
+        return "0"
+
 # ========== TÍTULO DE SECCIÓN CON FONDO CELESTE ==========
 def section_title(pdf, title):
     """Título de sección con fondo celeste y texto azul oscuro"""
@@ -280,10 +291,9 @@ def miembros_hogar(pdf, data):
         "Célula Social - Composición Familiar del Colaborador (viven dentro del hogar)"
     ], ["B"])
 
-    # Anchos ajustados para mejor manejo de texto largo
     headers = ["Nombres y Apellidos", "Edad", "Parentezco", "Estado Civil", "Instrucción", "Ocupación", "Lugar trabajo o estudio", "Ingresos", "Teléfono"]
-    widths = [38, 10, 18, 14, 18, 18, 24, 14, 36]  # Total: 190
-    line_height = 5.5  # Altura de línea ligeramente mayor para mejor legibilidad
+    widths = [38, 10, 18, 14, 18, 18, 24, 14, 36]
+    line_height = 5.5
 
     table_row_multiline(pdf, widths, headers, ["B", "B", "B", "B", "B", "B", "B", "B", "B"], line_height)
 
@@ -297,11 +307,10 @@ def miembros_hogar(pdf, data):
         ingreso = m.get("income", "")
         if ingreso:
             try:
-                ingreso = f"${float(ingreso):,.2f}"
+                ingreso = format_money(ingreso)
             except:
                 ingreso = str(ingreso)
         
-        # Limpiar textos para evitar problemas
         nombre = str(m.get("name", "")).strip()
         if not nombre:
             nombre = "-"
@@ -314,7 +323,7 @@ def miembros_hogar(pdf, data):
             str(m.get("education", "")).strip() or "-",
             str(m.get("job", "")).strip() or "-",
             str(m.get("work_or_study_place", "")).strip() or "-",
-            ingreso or "-",
+            ingreso or "0",
             str(m.get("phone", "")).strip() or "-"
         ], ["", "", "", "", "", "", "", "", ""], line_height)
 
@@ -495,26 +504,26 @@ def vivienda(pdf, data):
         data.get("house_observations", "")
     ], ["B", "", "B", "", "B", ""])
     
+    # DISTRIBUCIÓN DE LA VIVIENDA - CON CANTIDADES NUMÉRICAS
     table_row_multiline(pdf, [190], [
-        "Distribucion de la vivienda"
+        "Distribucion de la vivienda (cantidades)"
     ], ["B"])
     
-    dormitorio = checkbox(data.get("house_distribution") == "dormitorio")
-    camas = checkbox(data.get("house_distribution") == "camas")
-    cocina = checkbox(data.get("house_distribution") == "cocina")
-    comedor = checkbox(data.get("house_distribution") == "comedor")
-    sala = checkbox(data.get("house_distribution") == "sala")
-    bano = checkbox(data.get("house_distribution") == "bano")
-    patio = checkbox(data.get("house_distribution") == "patio")
-    jardin = checkbox(data.get("house_distribution") == "jardin")
-    terraza = checkbox(data.get("house_distribution") == "terraza")
-    garaje = checkbox(data.get("house_distribution") == "garaje")
+    distribution = data.get("house_distribution", {})
     
-    table_row_multiline(pdf, [190], [
-        f"{dormitorio} Dormitorio     {camas} Camas     {cocina} Cocina     "
-        f"{comedor} Comedor     {sala} Sala     \n{bano} Baño     {patio} Patio     " 
-        f"{jardin} Jardín     {terraza} Terraza     {garaje} Garaje"
-    ], [""])
+    # Mostrar los elementos que tienen cantidad > 0
+    elementos = []
+    for key, cantidad in distribution.items():
+        if cantidad and int(cantidad) > 0:
+            nombre_mostrar = key.replace('_', ' ').title()
+            elementos.append(f"{nombre_mostrar}: {cantidad}")
+    
+    if elementos:
+        texto_distribucion = "     ".join(elementos)
+    else:
+        texto_distribucion = "No se registran elementos"
+    
+    table_row_multiline(pdf, [190], [texto_distribucion], [""])
     
     table_row_multiline(pdf, [190], [
         "Techo o cubierta"
@@ -530,7 +539,7 @@ def vivienda(pdf, data):
     malo_techo = checkbox(data.get("roof_status") == "malo")
     
     table_row_multiline(pdf, [95, 95], [
-        f"{loza} Loza     \n{eternit} Eternit     \n{zinc} Zinc     \n{teja} Teja     \n{plastico} Plástico     \nOtros:{data.get("roof_type_other", "")}", 
+        f"{loza} Loza     \n{eternit} Eternit     \n{zinc} Zinc     \n{teja} Teja     \n{plastico} Plástico     \nOtros:{data.get('roof_type_other', '')}", 
         f"Estado:   \n\n{bueno_techo} Bueno     \n{regular_techo} Regular     \n{malo_techo} Malo       \n      "
     ], ["", ""])
 
@@ -547,7 +556,7 @@ def vivienda(pdf, data):
     ], ["B"])
     
     table_row_multiline(pdf, [95, 95], [
-        f"{hormigon} Hormigón     \n{bloque} Bloque     \n{adobe} Adobe     \n{madera} Madera     \nOtros:{data.get("wall_type_other", "")}",
+        f"{hormigon} Hormigón     \n{bloque} Bloque     \n{adobe} Adobe     \n{madera} Madera     \nOtros:{data.get('wall_type_other', '')}",
         f"Estado:   \n{bueno_pared} Bueno     \n{regular_pared} Regular     \n{malo_pared} Malo       \n      "
     ], ["", ""])
     
@@ -564,7 +573,7 @@ def vivienda(pdf, data):
     malo_piso = checkbox(data.get("floor_status") == "malo")
 
     table_row_multiline(pdf, [95, 95], [
-        f"{entablado} Entablado     \n{baldosa} Baldosa     \n{cemento} Cemento     \n{tierra} Tierra     \nOtros:{data.get("floor_type_other", "")}",
+        f"{entablado} Entablado     \n{baldosa} Baldosa     \n{cemento} Cemento     \n{tierra} Tierra     \nOtros:{data.get('floor_type_other', '')}",
         f"Estado:   \n{bueno_piso} Bueno     \n{regular_piso} Regular     \n{malo_piso} Malo       \n      "
     ], ["", ""])
 
@@ -581,7 +590,7 @@ def vivienda(pdf, data):
     malo_estructura = checkbox(data.get("structure_status") == "malo")
 
     table_row_multiline(pdf, [95, 95], [
-        f"{hormigon_est} Hormigón     \n{hierro} Hierro     \n{madera_est} Madera     \n{bloque_est} Bloque     \nOtros:{data.get("structure_type_other", "")}",
+        f"{hormigon_est} Hormigón     \n{hierro} Hierro     \n{madera_est} Madera     \n{bloque_est} Bloque     \nOtros:{data.get('structure_type_other', '')}",
         f"Estado:   \n{bueno_estructura} Bueno     \n{regular_estructura} Regular     \n{malo_estructura} Malo       \n      "
     ], ["", ""])
     
@@ -639,7 +648,7 @@ def vivienda(pdf, data):
     transporteprivado = checkbox(data.get("transport_type") == "privado")
     table_row_multiline(pdf, [30, 160], [
         "Transporte",
-        f"{transportepublico} Público     {transporteempresa} Empresa     {transporteprivado} Privado     Otro: {data.get("transport_type_other", "")}"
+        f"{transportepublico} Público     {transporteempresa} Empresa     {transporteprivado} Privado     Otro: {data.get('transport_type_other', '')}"
     ], ["B", ""])
     
     table_row_multiline(pdf, [60, 130], [
@@ -696,40 +705,74 @@ def economia(pdf, data):
         f"{gastos_compartidos} Sí     {gastos_no_compartidos} No"
     ], ["B", ""])
     
-    table_row_multiline(pdf, [190], [
-        "Personas que aportan economicamente"
-    ], ["B"])
+    # Tabla de aportes económicos
+    pdf.set_font("Arial", "B", 9)
+    pdf.cell(95, 8, "Personas que aportan economicamente", "B", 0, "L")
+    pdf.cell(95, 8, "Monto", "B", 1, "L")
     
+    pdf.set_font("Arial", "", 9)
+    aportes_data = [
+        ("Padre:", data.get('father_contribution', 0)),
+        ("Madre:", data.get('mother_contribution', 0)),
+        ("Hermanos:", data.get('siblings_contribution', 0)),
+        ("Colaborador:", data.get('collaborators_contribution', 0)),
+        ("Conyuge:", data.get('spouse_contribution', 0)),
+        ("Hijos:", data.get('children_contribution', 0)),
+        ("Otros:", data.get('other_contribution', 0))
+    ]
+    
+    for persona, monto in aportes_data:
+        monto_str = format_money(monto)
+        pdf.cell(95, 7, persona, 1, 0, "L")
+        pdf.cell(95, 7, monto_str, 1, 1, "R")
+    
+    total_contrib = data.get('total_contribution', 0)
+    total_contrib_str = format_money(total_contrib)
+    pdf.set_font("Arial", "B", 9)
+    pdf.cell(95, 8, "TOTAL:", 1, 0, "L")
+    pdf.cell(95, 8, total_contrib_str, 1, 1, "R")
+    pdf.set_font("Arial", "", 10)
+    
+    deuda = data.get('debt_amount', 0)
+    deuda_str = format_money(deuda)
     table_row_multiline(pdf, [95, 95], [
-        f"Padre: \nMadre: \nHermanos: \nColaborador: \nConyuge: \nHijos: \nOtros:",
-        f"${data.get('father_contribution', '')} \n${data.get('mother_contribution', '')} \n${data.get('siblings_contribution', '')} \n${data.get('collaborators_contribution', '')} \n${data.get('spouse_contribution', '')} \n${data.get('children_contribution', '')} \n${data.get('other_contribution', '')}"   
+        "Monto de deudas:", deuda_str
     ], ["B", ""])
     
+    prestamos_formales = "Sí" if data.get("formal_loans") else "No"
+    formal_amt = data.get('formal_loans_amount', 0)
+    formal_amt_str = format_money(formal_amt)
     table_row_multiline(pdf, [95, 95], [
-        "TOTAL:", f"${data.get('total_contribution', '')}"
+        f"Prestamos Formales: {prestamos_formales}",
+        formal_amt_str
     ], ["B", ""])
     
+    prestamos_informales = "Sí" if data.get("informal_loans") else "No"
     table_row_multiline(pdf, [95, 95], [
-        "Monto de deudas:", f"${data.get('debt_amount', '')}"
+        f"Prestamos Informales: {prestamos_informales}",
+        ""
     ], ["B", ""])
     
-    prestamos_formales = checkbox(data.get("formal_loans"))
+    family_amt = data.get('informal_loans_family_amount', 0)
+    family_amt_str = format_money(family_amt)
     table_row_multiline(pdf, [95, 95], [
-        f"Prestamos: {prestamos_formales} Formales",
-        f"${data.get('formal_loans_amount', '')}"
-    ], ["B", ""])
+        "  - Familiares:",
+        family_amt_str
+    ], ["", ""])
     
-    prestamos_informales = checkbox(data.get("informal_loans"))
+    lender_amt = data.get('informal_loans_moneylender_amount', 0)
+    lender_amt_str = format_money(lender_amt)
     table_row_multiline(pdf, [95, 95], [
-        f"Prestamos: {prestamos_informales} Informales"
-        f"\nFamiliares:"
-        f"\nChulqueros"
-        f"\n\nOtros:",
-        f"${data.get('informal_loans_amount', '')}"
-        f"\n${data.get('informal_loans_family_amount', '')}"
-        f"\n${data.get('informal_loans_moneylender_amount', '')}"
-        f"\n\n${data.get('informal_loans_other_amount', '')}"
-    ], ["B", ""])
+        "  - Chulqueros:",
+        lender_amt_str
+    ], ["", ""])
+    
+    other_amt = data.get('informal_loans_other_amount', 0)
+    other_amt_str = format_money(other_amt)
+    table_row_multiline(pdf, [95, 95], [
+        "  - Otros:",
+        other_amt_str
+    ], ["", ""])
     
     sitarjetas = checkbox(data.get("credit_cards") == 'si')
     notarjetas = checkbox(data.get("credit_cards") == 'no')
@@ -738,50 +781,44 @@ def economia(pdf, data):
         f"{sitarjetas} Sí     {notarjetas} No"
     ], ["B", ""])
     
-    table_row_multiline(pdf, [190], [
-        "Gastos"
-    ], ["B"])
+    # Tabla de gastos
+    pdf.ln(3)
+    pdf.set_font("Arial", "B", 9)
+    pdf.cell(95, 8, "Gastos", "B", 0, "L")
+    pdf.cell(95, 8, "Monto", "B", 1, "L")
     
-    table_row_multiline(pdf, [95, 95], [
-        f"Alimentación:\n"
-        f"Educación:\n"
-        f"Vivienda:\n"
-        f"Vestimenta:\n"
-        f"Salud:\n"
-        f"Transporte:\n"
-        f"Servicios básicos:\n"
-        f"Internet:\n"
-        f"Tv Cable:\n"
-        f"Plan Celular:\n"
-        f"Prestamos:\n"
-        f"Prestamos Quirografarios:\n"
-        f"Tarjetas de crédito:\n"
-        f"Pension de Alimentos:\n"
-        f"Locales Comerciales:\n"
-        f"Apoyo economico a terceras personas:\n"
-        f"Otros Gastos:\n",
-        f"${data.get("food_support", "")}\n"
-        f"${data.get("education_support", "")}\n"
-        f"${data.get("housing_support", "")}\n"
-        f"${data.get("clothing_support", "")}\n"
-        f"${data.get("health_support", "")}\n"
-        f"${data.get("transport_support", "")}\n"
-        f"${data.get("basic_services_support", "")}\n"
-        f"${data.get("internet_support", "")}\n"
-        f"${data.get("cable_tv_support", "")}\n"
-        f"${data.get("cell_plan_support", "")}\n"
-        f"${data.get("loans_support", "")}\n"
-        f"${data.get("unsecured_loans_support", "")}\n"
-        f"${data.get("credit_cards_support", "")}\n"
-        f"${data.get("alimony_support", "")}\n"
-        f"${data.get("commercial_properties_support", "")}\n"
-        f"${data.get("financial_support_others", "")}\n"
-        f"${data.get("other_expenses_support", "")}\n"
-    ], ["B", ""])
+    pdf.set_font("Arial", "", 8)
+    gastos_data = [
+        ("Alimentación:", data.get('food_support', 0)),
+        ("Educación:", data.get('education_support', 0)),
+        ("Vivienda:", data.get('housing_support', 0)),
+        ("Vestimenta:", data.get('clothing_support', 0)),
+        ("Salud:", data.get('health_support', 0)),
+        ("Transporte:", data.get('transport_support', 0)),
+        ("Servicios básicos:", data.get('basic_services_support', 0)),
+        ("Internet:", data.get('internet_support', 0)),
+        ("Tv Cable:", data.get('cable_tv_support', 0)),
+        ("Plan Celular:", data.get('cell_plan_support', 0)),
+        ("Préstamos:", data.get('loans_support', 0)),
+        ("Préstamos Quirografarios:", data.get('unsecured_loans_support', 0)),
+        ("Tarjetas de crédito:", data.get('credit_cards_support', 0)),
+        ("Pensión de Alimentos:", data.get('alimony_support', 0)),
+        ("Locales Comerciales:", data.get('commercial_properties_support', 0)),
+        ("Apoyo económico a terceros:", data.get('financial_support_others', 0)),
+        ("Otros Gastos:", data.get('other_expenses_support', 0))
+    ]
     
-    table_row_multiline(pdf, [95, 95], [    
-        "TOTAL GASTOS:", f"${data.get("total_expenses", "")}"
-    ], ["B", ""])
+    for gasto, monto in gastos_data:
+        monto_str = format_money(monto)
+        pdf.cell(95, 6, gasto, 1, 0, "L")
+        pdf.cell(95, 6, monto_str, 1, 1, "R")
+    
+    total_exp = data.get('total_expenses', 0)
+    total_exp_str = format_money(total_exp)
+    pdf.set_font("Arial", "B", 9)
+    pdf.cell(95, 8, "TOTAL GASTOS:", 1, 0, "L")
+    pdf.cell(95, 8, total_exp_str, 1, 1, "R")
+    pdf.set_font("Arial", "", 10)
     
     sitransporte = checkbox(data.get("transportation") == 'si')
     notransporte = checkbox(data.get("transportation") == 'no')
@@ -813,11 +850,24 @@ def economia(pdf, data):
         "Resumen de la actividad economica de la familia"
     ], ["B"])
     
-    table_row_multiline(pdf, [35, 30, 35, 30, 30, 30], [
-        "Ingresos:", data.get("total_income", ""), 
-        "Egresos:", data.get("total_expenses", ""), 
-        "Saldo:", data.get("balance", "")
-    ], ["B", "", "B", "", "B", ""])
+    total_income = data.get('total_income', 0)
+    total_income_str = format_money(total_income)
+    total_expenses = data.get('total_expenses', 0)
+    total_expenses_str = format_money(total_expenses)
+    balance = data.get('balance', 0)
+    balance_str = format_money(balance)
+    
+    # Resumen en una sola línea que no se sale de la hoja
+    pdf.set_font("Arial", "B", 9)
+    # Ancho total: 190, dividido en 6 columnas de aproximadamente 31.6 cada una
+    pdf.cell(55, 8, "Ingresos:", 1, 0, "L")
+    pdf.cell(40, 8, total_income_str, 1, 0, "R")
+    pdf.cell(55, 8, "Egresos:", 1, 0, "L")
+    pdf.cell(40, 8, total_expenses_str, 1, 0, "R")
+    pdf.set_font("Arial", "B", 10)
+    pdf.cell(55, 8, "Saldo:", 1, 0, "L")
+    pdf.cell(40, 8, balance_str, 1, 1, "R")
+    pdf.set_font("Arial", "", 10)
 
 def salud(pdf, data):
     section_title(pdf, "6. SALUD")
@@ -860,9 +910,9 @@ def salud(pdf, data):
     ], ["B", ""])
     
     table_row_multiline(pdf, [30, 30, 35, 30, 35, 30], [
-        "Tipo:", f"{data.get("family_disability_type", "")}",
-        "Porcentaje:", f"{data.get("family_disability_percentage", "")}",
-        "Parentezco:", f"{data.get("family_disability_relationship", "")}"
+        "Tipo:", f"{data.get('family_disability_type', '')}",
+        "Porcentaje:", f"{data.get('family_disability_percentage', '')}",
+        "Parentezco:", f"{data.get('family_disability_relationship', '')}"
     ], ["B", "", "B", "", "B", ""])
 
 def laboral(pdf, data):
@@ -1002,12 +1052,9 @@ def firmas(pdf, data):
     section_title(pdf, "8. FIRMAS")
     pdf.ln(10)
 
-    # Obtener nombre del entrevistado desde los datos
     nombre_entrevistado = data.get("name", "")
-    # Nombre fijo del trabajador social (puedes cambiarlo)
     nombre_trabajador_social = "Mgs. Ana Lucía Pérez"
 
-    # Líneas de firmas
     pdf.cell(90, 8, "_____________________________", 0, 0, "C")
     pdf.cell(10)
     pdf.cell(90, 8, "_____________________________", 0, 1, "C")
@@ -1016,7 +1063,6 @@ def firmas(pdf, data):
     pdf.cell(10)
     pdf.cell(90, 6, "Firma del trabajador social", 0, 1, "C")
 
-    # Nombres debajo de las firmas
     pdf.cell(90, 6, nombre_entrevistado, 0, 0, "C")
     pdf.cell(10)
     pdf.cell(90, 6, nombre_trabajador_social, 0, 1, "C")

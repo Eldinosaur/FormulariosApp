@@ -220,6 +220,30 @@ class App:
         self.entries[key] = entry
         return entry
 
+    def create_number_field(self, parent, label, key, row, column=0, width=15):
+        """Campo numérico con validación"""
+        tk.Label(parent, text=label, font=("Segoe UI", 9),
+                bg=self.colors["white"], fg=self.colors["secondary"]).grid(
+                row=row, column=column, sticky="w", pady=(6, 2), padx=(0, 10))
+        
+        entry = tk.Entry(parent, font=("Segoe UI", 10), 
+                        width=width, relief="solid", bd=1,
+                        highlightbackground=self.colors["card_border"],
+                        highlightthickness=1)
+        entry.grid(row=row, column=column+1, sticky="w", pady=(6, 2), padx=(0, 20))
+        
+        # Validar que solo ingresen números
+        def validate_number(P):
+            if P == "" or P.isdigit() or (P.replace('.', '', 1).isdigit() and P.count('.') <= 1):
+                return True
+            return False
+        
+        validate_cmd = parent.register(validate_number)
+        entry.config(validate="key", validatecommand=(validate_cmd, "%P"))
+        
+        self.entries[key] = entry
+        return entry
+
     def create_combo(self, parent, label, key, values, row, column=0, width=30):
         """Combobox"""
         tk.Label(parent, text=label, font=("Segoe UI", 9),
@@ -260,7 +284,7 @@ class App:
         
         self.create_field(s1, "Cédula *", "ci", 0, 0, 25, required=True)
         self.create_field(s1, "Nombre completo *", "name", 0, 2, 35, required=True)
-        self.create_field(s1, "Edad", "age", 1, 0, 15)
+        self.create_number_field(s1, "Edad", "age", 1, 0, 15)
         self.create_field(s1, "Lugar y Fecha de Nacimiento", "birth_date_place", 1, 2, 35)
         
         self.create_radio_group(s1, "Género", "gender",
@@ -278,7 +302,7 @@ class App:
         self.create_radio_group(s1, "¿Tiene discapacidad?", "disability",
                                [("Sí", "si"), ("No", "no")], 6, 0)
         self.create_field(s1, "Tipo de discapacidad", "disability_type", 7, 0, 30)
-        self.create_field(s1, "Porcentaje", "disability_percentage", 7, 2, 15)
+        self.create_number_field(s1, "Porcentaje", "disability_percentage", 7, 2, 15)
         
         self.create_radio_group(s1, "Nivel de Educación", "educational_level",
                                [("Profesional", "profesional"), ("Bachiller", "bachiller"), 
@@ -320,7 +344,7 @@ class App:
             fg=self.colors["primary"], bg=self.colors["white"])
         self.family_counter_label.pack(side="left")
         
-        # Tabla de miembros - NUEVAS COLUMNAS
+        # Tabla de miembros
         table_frame = tk.Frame(s1, bg=self.colors["primary"])
         table_frame.pack(fill="x", pady=(0, 10))
         
@@ -351,13 +375,13 @@ class App:
                                 ("Monoparental Materna", "materna"), ("Monoparental Paterna", "paterna"),
                                 ("Unipersonal", "unipersonal")], 0, 0)
         
-        self.create_field(s2, "N° de hijos del colaborador", "children_count", 1, 0, 15)
+        self.create_number_field(s2, "N° de hijos del colaborador", "children_count", 1, 0, 15)
         
         self.create_radio_group(s2, "¿Hijos fuera del matrimonio?", "children_outside_marriage",
                                [("Sí", "si"), ("No", "no")], 2, 0)
         
         self.create_field(s2, "Paga pensión alimenticia", "pays_alimony", 3, 0, 30)
-        self.create_field(s2, "N° de matrimonio/relación actual", "marriage_number", 4, 0, 15)
+        self.create_number_field(s2, "N° de matrimonio/relación actual", "marriage_number", 4, 0, 15)
         self.create_field(s2, "¿Comparte tiempo de descanso en familia?", "family_time", 5, 0, 40)
         self.create_field(s2, "Frecuencia", "family_time_frequency", 6, 0, 30)
         self.create_field(s2, "Actividades familiares", "family_activities", 7, 0, 50)
@@ -402,7 +426,7 @@ class App:
                                 ("Hipotecada", "hipotecada"), ("Prestada", "prestada"),
                                 ("Otros", "otros")], 1, 0)
         
-        self.create_field(s, "N° de habitantes", "household_size", 2, 0, 15)
+        self.create_number_field(s, "N° de habitantes", "household_size", 2, 0, 15)
         self.create_field(s, "Tiempo en el sector", "time_living_sector", 2, 2, 20)
         
         self.create_radio_group(s, "¿Se considera seguro?", "is_safe",
@@ -419,21 +443,41 @@ class App:
         self.create_field(s, "Avalúo", "house_valuation", 6, 0, 20)
         self.create_field(s, "Observaciones", "house_observations", 7, 0, 50)
         
-        # Distribución
-        s2 = self.create_card(parent, "Distribución de la Vivienda", "🏗️")
+        # Distribución de la Vivienda - AHORA CON CAMPOS NUMÉRICOS
+        s2 = self.create_card(parent, "Distribución de la Vivienda (cantidades)", "🏗️")
         dist_frame = tk.Frame(s2, bg=self.colors["white"])
         dist_frame.pack(fill="x")
         
-        distribuciones = ["dormitorio", "camas", "cocina", "comedor", "sala", 
-                         "baño", "patio", "jardín", "terraza", "garaje"]
+        # Lista de elementos de la vivienda con sus claves
+        distribuciones = [
+            ("Dormitorios", "dormitorios"),
+            ("Camas", "camas"),
+            ("Cocinas", "cocinas"),
+            ("Comedores", "comedores"),
+            ("Salas", "salas"),
+            ("Baños", "banos"),
+            ("Patios", "patios"),
+            ("Jardines", "jardines"),
+            ("Terrazas", "terrazas"),
+            ("Garajes", "garajes")
+        ]
         
-        for i, dist in enumerate(distribuciones):
-            var = tk.StringVar(value="no")
-            self.entries[f"house_distribution_{dist}"] = var
-            cb = tk.Checkbutton(dist_frame, text=dist.capitalize(), variable=var,
-                               onvalue=dist, offvalue="no", bg=self.colors["white"],
-                               font=("Segoe UI", 9))
-            cb.grid(row=i//5, column=i%5, sticky="w", padx=15, pady=5)
+        for i, (label, key) in enumerate(distribuciones):
+            tk.Label(dist_frame, text=label, font=("Segoe UI", 9),
+                    bg=self.colors["white"], fg=self.colors["secondary"]).grid(row=i//2, column=(i%2)*2, padx=15, pady=5, sticky="w")
+            
+            entry = tk.Entry(dist_frame, width=10, font=("Segoe UI", 10))
+            entry.grid(row=i//2, column=(i%2)*2+1, padx=5, pady=5, sticky="w")
+            
+            # Validar solo números
+            def validate_number(P):
+                if P == "" or P.isdigit():
+                    return True
+                return False
+            validate_cmd = dist_frame.register(validate_number)
+            entry.config(validate="key", validatecommand=(validate_cmd, "%P"))
+            
+            self.entries[f"house_distribution_{key}"] = entry
         
         # Materiales
         s3 = self.create_card(parent, "Materiales de Construcción", "🔨")
@@ -525,7 +569,7 @@ class App:
         self.create_radio_group(s4, "¿Tiene animales?", "animals",
                                [("Sí", "si"), ("No", "no")], 12, 0)
         self.create_field(s4, "Tipo", "animal_type", 13, 0, 25)
-        self.create_field(s4, "Cantidad", "animal_quantity", 13, 2, 15)
+        self.create_number_field(s4, "Cantidad", "animal_quantity", 13, 2, 15)
         
         self.create_radio_group(s4, "¿Zona de peste?", "peste",
                                [("Sí", "si"), ("No", "no")], 14, 0)
@@ -552,9 +596,28 @@ class App:
                     bg=self.colors["white"]).grid(row=2+i, column=0, sticky="w", pady=5, padx=5)
             entry = tk.Entry(s, width=15, font=("Segoe UI", 10))
             entry.grid(row=2+i, column=1, pady=5, padx=5)
+            
+            # Validar solo números
+            def validate_number(P):
+                if P == "" or P.isdigit() or (P.replace('.', '', 1).isdigit() and P.count('.') <= 1):
+                    return True
+                return False
+            validate_cmd = s.register(validate_number)
+            entry.config(validate="key", validatecommand=(validate_cmd, "%P"))
+            
+            # Bind para actualizar total
+            entry.bind("<KeyRelease>", lambda e: self.calculate_total_contributions())
             self.entries[key] = entry
         
-        self.create_field(s, "TOTAL APORTES", "total_contribution", 9, 0, 20)
+        # TOTAL APORTES
+        tk.Label(s, text="TOTAL APORTES", font=("Segoe UI", 9, "bold"),
+                bg=self.colors["white"], fg=self.colors["primary"]).grid(row=9, column=0, sticky="w", pady=5, padx=5)
+        total_contrib_entry = tk.Entry(s, width=20, font=("Segoe UI", 10, "bold"),
+                                       fg=self.colors["primary"], relief="solid", bd=1)
+        total_contrib_entry.grid(row=9, column=1, pady=5, padx=5, sticky="w")
+        total_contrib_entry.config(state="readonly")
+        self.entries["total_contribution"] = total_contrib_entry
+        
         self.create_field(s, "Monto de deudas", "debt_amount", 10, 0, 20)
         
         # Préstamos
@@ -594,14 +657,45 @@ class App:
                     bg=self.colors["white"]).grid(row=21+i, column=0, sticky="w", pady=3, padx=5)
             entry = tk.Entry(s, width=15, font=("Segoe UI", 10))
             entry.grid(row=21+i, column=1, pady=3, padx=5)
+            
+            # Validar solo números
+            def validate_number(P):
+                if P == "" or P.isdigit() or (P.replace('.', '', 1).isdigit() and P.count('.') <= 1):
+                    return True
+                return False
+            validate_cmd = s.register(validate_number)
+            entry.config(validate="key", validatecommand=(validate_cmd, "%P"))
+            
+            # Bind para actualizar total
+            entry.bind("<KeyRelease>", lambda e: self.calculate_total_expenses())
             self.entries[key] = entry
         
-        self.create_field(s, "TOTAL GASTOS", "total_expenses", 38, 0, 20)
-        self.create_field(s, "TOTAL INGRESOS", "total_income", 39, 0, 20)
-        self.create_field(s, "SALDO", "balance", 40, 0, 20)
+        # TOTAL GASTOS
+        tk.Label(s, text="TOTAL GASTOS", font=("Segoe UI", 9, "bold"),
+                bg=self.colors["white"], fg=self.colors["primary"]).grid(row=38, column=0, sticky="w", pady=5, padx=5)
+        total_expenses_entry = tk.Entry(s, width=20, font=("Segoe UI", 10, "bold"), 
+                                        fg=self.colors["primary"], relief="solid", bd=1)
+        total_expenses_entry.grid(row=38, column=1, pady=5, padx=5, sticky="w")
+        total_expenses_entry.config(state="readonly")
+        self.entries["total_expenses"] = total_expenses_entry
         
-        self.entries["total_income"].bind("<KeyRelease>", self.calculate_balance)
-        self.entries["total_expenses"].bind("<KeyRelease>", self.calculate_balance)
+        # TOTAL INGRESOS
+        tk.Label(s, text="TOTAL INGRESOS", font=("Segoe UI", 9, "bold"),
+                bg=self.colors["white"], fg=self.colors["primary"]).grid(row=39, column=0, sticky="w", pady=5, padx=5)
+        total_income_entry = tk.Entry(s, width=20, font=("Segoe UI", 10, "bold"),
+                                      fg=self.colors["primary"], relief="solid", bd=1)
+        total_income_entry.grid(row=39, column=1, pady=5, padx=5, sticky="w")
+        total_income_entry.config(state="readonly")
+        self.entries["total_income"] = total_income_entry
+        
+        # SALDO
+        tk.Label(s, text="SALDO", font=("Segoe UI", 9, "bold"),
+                bg=self.colors["white"], fg=self.colors["success"]).grid(row=40, column=0, sticky="w", pady=5, padx=5)
+        balance_entry = tk.Entry(s, width=20, font=("Segoe UI", 10, "bold"),
+                                 fg=self.colors["success"], relief="solid", bd=1)
+        balance_entry.grid(row=40, column=1, pady=5, padx=5, sticky="w")
+        balance_entry.config(state="readonly")
+        self.entries["balance"] = balance_entry
         
         self.create_radio_group(s, "¿Posee vehículo?", "transportation",
                                [("Sí", "si"), ("No", "no")], 41, 0)
@@ -628,7 +722,7 @@ class App:
         self.create_radio_group(s, "¿Discapacidad en la familia?", "family_disability",
                                [("Sí", "si"), ("No", "no")], 6, 0)
         self.create_field(s, "Tipo", "family_disability_type", 7, 0, 25)
-        self.create_field(s, "Porcentaje", "family_disability_percentage", 7, 2, 15)
+        self.create_number_field(s, "Porcentaje", "family_disability_percentage", 7, 2, 15)
         self.create_field(s, "Parentezco", "family_disability_relationship", 8, 0, 25)
 
     def build_laboral(self, parent):
@@ -669,7 +763,7 @@ class App:
             self.add_family_btn.config(text=f"+ Agregar familiar ({self.MAX_FAMILY_MEMBERS - count} disponibles)")
 
     def add_family(self):
-        """Agrega un miembro a la tabla familiar - MODIFICADO con nuevas columnas"""
+        """Agrega un miembro a la tabla familiar"""
         if len(self.family_rows) >= self.MAX_FAMILY_MEMBERS:
             messagebox.showwarning(
                 "Límite alcanzado", 
@@ -686,7 +780,7 @@ class App:
 
         entries = {}
         
-        # NUEVOS CAMPOS: 9 campos ahora
+        # Campos para familiares
         fields = [
             ("name", "Nombre", 18),
             ("age", "Edad", 6),
@@ -719,14 +813,95 @@ class App:
         self.family_rows.append(entries)
         self.update_family_counter()
 
+    def calculate_total_contributions(self, event=None):
+        """Calcula el total de aportes y actualiza TOTAL APORTES y TOTAL INGRESOS"""
+        total = 0
+        contribution_keys = ["father_contribution", "mother_contribution", "siblings_contribution", 
+                            "collaborators_contribution", "spouse_contribution", "children_contribution", 
+                            "other_contribution"]
+        
+        for key in contribution_keys:
+            if key in self.entries:
+                try:
+                    value_str = self.entries[key].get()
+                    value = float(value_str) if value_str else 0
+                    total += value
+                except ValueError:
+                    pass
+        
+        # Actualizar TOTAL APORTES
+        if "total_contribution" in self.entries:
+            self.entries["total_contribution"].config(state="normal")
+            self.entries["total_contribution"].delete(0, tk.END)
+            self.entries["total_contribution"].insert(0, f"{total:.2f}")
+            self.entries["total_contribution"].config(state="readonly")
+        
+        # Actualizar TOTAL INGRESOS (igual al total de aportes)
+        if "total_income" in self.entries:
+            self.entries["total_income"].config(state="normal")
+            self.entries["total_income"].delete(0, tk.END)
+            self.entries["total_income"].insert(0, f"{total:.2f}")
+            self.entries["total_income"].config(state="readonly")
+        
+        # Actualizar balance
+        self.calculate_balance()
+
+    def calculate_total_expenses(self, event=None):
+        """Calcula el total de gastos y actualiza TOTAL GASTOS"""
+        total = 0
+        expense_keys = ["food_support", "education_support", "housing_support", "clothing_support",
+                       "health_support", "transport_support", "basic_services_support", "internet_support",
+                       "cable_tv_support", "cell_plan_support", "loans_support", "unsecured_loans_support",
+                       "credit_cards_support", "alimony_support", "commercial_properties_support",
+                       "financial_support_others", "other_expenses_support"]
+        
+        for key in expense_keys:
+            if key in self.entries:
+                try:
+                    value_str = self.entries[key].get()
+                    value = float(value_str) if value_str else 0
+                    total += value
+                except ValueError:
+                    pass
+        
+        # Actualizar TOTAL GASTOS
+        if "total_expenses" in self.entries:
+            self.entries["total_expenses"].config(state="normal")
+            self.entries["total_expenses"].delete(0, tk.END)
+            self.entries["total_expenses"].insert(0, f"{total:.2f}")
+            self.entries["total_expenses"].config(state="readonly")
+        
+        # Actualizar balance
+        self.calculate_balance()
+
     def calculate_balance(self, event=None):
+        """Calcula el balance (ingresos - egresos)"""
         try:
-            income = float(self.entries.get("total_income", tk.Entry()).get() or 0)
-            expenses = float(self.entries.get("total_expenses", tk.Entry()).get() or 0)
+            # Obtener ingresos
+            income = 0
+            if "total_income" in self.entries:
+                income_str = self.entries["total_income"].get()
+                income = float(income_str) if income_str else 0
+            
+            # Obtener egresos
+            expenses = 0
+            if "total_expenses" in self.entries:
+                expenses_str = self.entries["total_expenses"].get()
+                expenses = float(expenses_str) if expenses_str else 0
+            
             balance = income - expenses
+            
+            # Actualizar SALDO
             if "balance" in self.entries:
+                self.entries["balance"].config(state="normal")
                 self.entries["balance"].delete(0, tk.END)
                 self.entries["balance"].insert(0, f"{balance:.2f}")
+                # Cambiar color según si es positivo o negativo
+                if balance >= 0:
+                    self.entries["balance"].config(fg=self.colors["success"])
+                else:
+                    self.entries["balance"].config(fg=self.colors["danger"])
+                self.entries["balance"].config(state="readonly")
         except:
             pass
 
@@ -741,7 +916,8 @@ class App:
         for key, entry in self.entries.items():
             if hasattr(entry, 'get'):
                 value = entry.get()
-                if key in ["total_income", "total_expenses", "balance"]:
+                # Convertir valores numéricos
+                if key in ["total_income", "total_expenses", "balance", "total_contribution"]:
                     try:
                         value = float(value) if value else 0
                     except:
@@ -750,55 +926,56 @@ class App:
             else:
                 data[key] = entry
         
-        # Distribución de vivienda
-        distribution = []
-        for key in self.entries:
-            if key.startswith("house_distribution_") and self.entries[key].get() != "no":
-                distribution.append(self.entries[key].get())
-        data["house_distribution"] = distribution if distribution else ["ninguno"]
+        # Distribución de vivienda (ahora con cantidades numéricas)
+        distribution = {}
+        dist_keys = ["dormitorios", "camas", "cocinas", "comedores", "salas", 
+                    "banos", "patios", "jardines", "terrazas", "garajes"]
+        
+        for key in dist_keys:
+            entry_key = f"house_distribution_{key}"
+            if entry_key in self.entries:
+                try:
+                    value = int(self.entries[entry_key].get() or 0)
+                    if value > 0:
+                        distribution[key] = value
+                except ValueError:
+                    pass
+        
+        data["house_distribution"] = distribution
         
         data["visit_date"] = datetime.datetime.now().strftime("%d/%m/%Y")
         data["photo"] = self.photo_path.get()
         
-        # =========================================================
-        # RECOLECTAR FAMILIARES CON NUEVOS CAMPOS
-        # =========================================================
+        # Recolectar familiares
         family = []
         skipped_count = 0
         
         for member in self.family_rows:
-            # Limpiar y verificar cada campo
             row_data = {}
             is_complete = True
             
             for k, e in member.items():
                 value = e.get().strip()
                 row_data[k] = value
-                if value == "":  # Si algún campo está vacío, la fila es incompleta
+                if value == "":
                     is_complete = False
             
-            # Solo agregar si TODOS los campos tienen datos
             if is_complete and any(row_data.values()):
+                # Convertir ingresos a número
+                if "income" in row_data and row_data["income"]:
+                    try:
+                        row_data["income"] = float(row_data["income"])
+                    except:
+                        pass
                 family.append(row_data)
             elif any(row_data.values()):
-                # Fila parcialmente llena - contar para advertencia
                 skipped_count += 1
         
-        # Mostrar advertencia si se omitieron filas
         if skipped_count > 0:
             messagebox.showwarning(
                 "Filas omitidas", 
                 f"⚠️ Se omitieron {skipped_count} fila(s) de familiares porque estaban incompletas.\n\n"
-                "Para que un familiar se guarde correctamente, debe completar:\n"
-                "• Nombres y Apellidos\n"
-                "• Edad\n"
-                "• Parentesco\n"
-                "• Estado Civil\n"
-                "• Instrucción\n"
-                "• Ocupación\n"
-                "• Lugar trabajo/estudio\n"
-                "• Ingreso\n"
-                "• Teléfono\n\n"
+                "Para que un familiar se guarde correctamente, debe completar todos los campos.\n"
                 "Las filas vacías o incompletas no se incluirán en el PDF."
             )
         
