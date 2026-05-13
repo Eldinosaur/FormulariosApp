@@ -6,101 +6,234 @@ from datetime import datetime
 FILE_PATH = 'data/data.xlsx'
 
 
+def checkbox_to_text(value):
+    """Convierte checkbox a texto legible"""
+    if value is True or value == "si" or value == "sí" or value == "true":
+        return "Sí"
+    elif value is False or value == "no" or value == "false":
+        return "No"
+    return str(value) if value else ""
+
+
+def format_money_excel(value):
+    """Formatea valores monetarios para Excel (como número, no string)"""
+    try:
+        num = float(value) if value else 0
+        return num
+    except:
+        return 0
+
+
 def create_excel_file(data):
     """Crea o actualiza el archivo Excel con todos los datos del formulario"""
     
     # Definir todos los headers (completos)
     HEADERS = [
-        
-        # ========== 16. METADATOS ==========
+        # ========== METADATOS ==========
         "Fecha registro",
+        "Fecha visita",
+        
         # ========== 1. DATOS PERSONALES ==========
-        "CI", "Nombre completo", "Edad", "Fecha de nacimiento", "Género", 
-        "Estado civil", "Email", "Teléfono", "Dirección", "Contacto emergencia",
+        "CI", 
+        "Nombre completo", 
+        "Edad", 
+        "Fecha nacimiento lugar",
+        "Género", 
+        "Estado civil", 
+        "Email", 
+        "Teléfono", 
+        "Dirección", 
+        "Contacto emergencia",
         
         # ========== 2. DATOS LABORALES ==========
-        "Área de trabajo", "Puesto", "Fecha de ingreso",
+        "Área trabajo", 
+        "Puesto", 
+        "Fecha ingreso",
         
         # ========== 3. EDUCACIÓN ==========
-        "Nivel educativo", "Observaciones educación", "Estudia actualmente", 
-        "Carrera", "Nivel de estudio",
+        "Nivel educativo", 
+        "Observaciones educación", 
+        "Estudia actualmente", 
+        "Carrera", 
+        "Nivel estudio",
         
         # ========== 4. DISCAPACIDAD ==========
-        "Tiene discapacidad", "Tipo discapacidad", "Porcentaje discapacidad",
+        "Tiene discapacidad", 
+        "Tipo discapacidad", 
+        "Porcentaje discapacidad",
         
         # ========== 5. VIVIENDA ==========
-        "Sector", "Tipo vivienda", "Clase vivienda", "Tenencia", 
-        "N° habitantes", "Tiempo en sector", "¿Seguro?", "Avalúo", "Observaciones vivienda",
+        "Sector", 
+        "Tipo vivienda", 
+        "Clase vivienda", 
+        "Tenencia", 
+        "N° habitantes", 
+        "Tiempo sector", 
+        "Sector seguro", 
+        "Avalúo", 
+        "Observaciones vivienda",
         
         # ========== 6. DISTRIBUCIÓN VIVIENDA ==========
-        "Dormitorio", "Camas", "Cocina", "Comedor", "Sala", "Baño", "Patio", "Jardín", "Terraza", "Garaje",
+        "Dormitorio", 
+        "Camas", 
+        "Cocina", 
+        "Comedor", 
+        "Sala", 
+        "Baño", 
+        "Patio", 
+        "Jardín", 
+        "Terraza", 
+        "Garaje",
         
         # ========== 7. MATERIALES ==========
-        "Techo material", "Techo estado", "Techo otros",
-        "Pared material", "Pared estado", "Pared otros",
-        "Piso material", "Piso estado", "Piso otros",
-        "Estructura material", "Estructura estado", "Estructura otros",
+        "Techo material", 
+        "Techo estado", 
+        "Techo otros",
+        "Pared material", 
+        "Pared estado", 
+        "Pared otros",
+        "Piso material", 
+        "Piso estado", 
+        "Piso otros",
+        "Estructura material", 
+        "Estructura estado", 
+        "Estructura otros",
         
         # ========== 8. SERVICIOS BÁSICOS ==========
-        "Agua", "Luz", "Baño (SSHH)", "Observaciones servicios", "Hacinamiento",
-        "Manejo desechos", "Transporte", "Transporte otro", "Electrodomésticos",
-        "Tiene Internet", "Tipo Internet",
+        "Tipo agua", 
+        "Tipo luz", 
+        "Tipo SSHH", 
+        "Observaciones servicios", 
+        "Hacinamiento",
+        "Manejo desechos", 
+        "Tipo transporte", 
+        "Transporte otro", 
+        "Electrodomésticos",
+        "Tiene Internet", 
+        "Tipo Internet",
         
         # ========== 9. ANIMALES ==========
-        "Tiene animales", "Tipo animales", "Cantidad animales", 
-        "Zona peste", "Lugar tenencia", "Observaciones animales",
+        "Tiene animales", 
+        "Tipo animales", 
+        "Cantidad animales", 
+        "Zona peste", 
+        "Lugar tenencia", 
+        "Observaciones animales",
         
         # ========== 10. INFORMACIÓN FAMILIAR ==========
-        "Tipo familia", "N° hijos", "Hijos fuera matrimonio", "Paga pensión",
-        "N° matrimonio", "Comparte tiempo familia", "Frecuencia", "Actividades familiares",
-        "Actividades fuera trabajo", "Otras actividades domicilio", "Especificar actividades",
-        "Hobbies", "Tiempo hobbies", "Relación pareja", "Por qué relación pareja",
-        "Relación hijos", "Por qué relación hijos", "Problemas familiares", "Recibió ayuda",
-        "Migración familiar", "Recibió dinero exterior",
+        "Tipo familia", 
+        "N° hijos", 
+        "Hijos fuera matrimonio", 
+        "Paga pensión",
+        "N° matrimonio", 
+        "Comparte tiempo familia", 
+        "Frecuencia tiempo familiar", 
+        "Actividades familiares",
+        "Actividades fuera trabajo", 
+        "Otras actividades domicilio", 
+        "Especificar otras actividades",
+        "Hobbies", 
+        "Tiempo hobbies", 
+        "Relación pareja", 
+        "Por qué relación pareja",
+        "Relación hijos", 
+        "Por qué relación hijos", 
+        "Problemas familiares", 
+        "Recibió ayuda problemas",
+        "Migración familiar", 
+        "Recibió dinero exterior",
         
-        # ========== 11. SITUACIÓN ECONÓMICA ==========
+        # ========== 11. SITUACIÓN ECONÓMICA - APORTES ==========
         "Gastos compartidos",
-        "Aporte padre", "Aporte madre", "Aporte hermanos", "Aporte colaborador",
-        "Aporte cónyuge", "Aporte hijos", "Aporte otros", "Total aportes",
-        "Monto deudas", "Préstamos formales", "Monto formales",
-        "Préstamos informales", "Monto informales", "Préstamos familiares", 
-        "Préstamos chulqueros", "Otros préstamos informales", "Tarjetas crédito",
+        "Aporte padre", 
+        "Aporte madre", 
+        "Aporte hermanos", 
+        "Aporte colaborador",
+        "Aporte cónyuge", 
+        "Aporte hijos", 
+        "Aporte otros", 
+        "Total aportes",
+        "Monto deudas", 
+        "Préstamos formales", 
+        "Monto préstamos formales",
+        "Préstamos informales", 
+        "Préstamos familiares", 
+        "Préstamos chulqueros", 
+        "Otros préstamos informales", 
+        "Tarjetas crédito",
         
         # ========== 12. GASTOS MENSUALES ==========
-        "Gasto alimentación", "Gasto educación", "Gasto vivienda", "Gasto vestimenta",
-        "Gasto salud", "Gasto transporte", "Gasto servicios básicos", "Gasto internet",
-        "Gasto TV cable", "Gasto plan celular", "Gasto préstamos", "Gasto préstamos quirografarios",
-        "Gasto tarjetas crédito", "Gasto pensión alimentos", "Gasto locales comerciales",
-        "Gasto apoyo terceros", "Otros gastos", "Total gastos",
+        "Gasto alimentación", 
+        "Gasto educación", 
+        "Gasto vivienda", 
+        "Gasto vestimenta",
+        "Gasto salud", 
+        "Gasto transporte", 
+        "Gasto servicios básicos", 
+        "Gasto internet",
+        "Gasto TV cable", 
+        "Gasto plan celular", 
+        "Gasto préstamos", 
+        "Gasto préstamos quirografarios",
+        "Gasto tarjetas crédito", 
+        "Gasto pensión alimentos", 
+        "Gasto locales comerciales",
+        "Gasto apoyo terceros", 
+        "Otros gastos", 
+        "Total gastos",
         
         # ========== 13. INGRESOS Y BALANCE ==========
-        "Total ingresos", "Saldo", "Posee vehículo", "Descripción vehículo",
-        "Actividad económica adicional", "Crianza animales",
+        "Total ingresos", 
+        "Balance (Ingresos - Gastos)", 
+        "Posee vehículo", 
+        "Descripción vehículo",
+        "Actividad económica adicional", 
+        "Crianza animales",
         
         # ========== 14. SALUD ==========
-        "Practica deporte", "Cuál deporte", "Frecuencia deporte",
-        "Tiene enfermedad", "Problemas salud familia", "Cuáles problemas salud",
-        "Discapacidad familia", "Tipo discapacidad familia", "Porcentaje discapacidad familia",
+        "Practica deporte", 
+        "Deporte que practica", 
+        "Frecuencia deporte",
+        "Tiene enfermedad", 
+        "Problemas salud familia", 
+        "Descripción problemas salud",
+        "Discapacidad familia", 
+        "Tipo discapacidad familia", 
+        "Porcentaje discapacidad familia",
         "Parentezco discapacidad",
         
         # ========== 15. SITUACIÓN LABORAL ==========
-        "Ocupación anterior", "Funciones actuales", "Relación con formación",
-        "Relación compañeros", "Qué mejoraría", "Resolución conflictos",
-        "Trabajo desgastante", "Presión laboral", "Genera estrés", "Tiempo suficiente",
-        "Reconocimiento jefe", "Reconocimiento empresa", "Proyección", "Discriminación",
-        "Mejora como trabajador", "Beneficios sugeridos"
-        
-       
+        "Ocupación anterior", 
+        "Funciones actuales", 
+        "Relación trabajo-formación",
+        "Relación compañeros", 
+        "Qué mejoraría", 
+        "Resolución conflictos",
+        "Trabajo desgastante", 
+        "Presión laboral", 
+        "Genera estrés", 
+        "Tiempo suficiente",
+        "Reconocimiento jefe", 
+        "Reconocimiento empresa", 
+        "Proyección laboral", 
+        "Ha sufrido discriminación",
+        "Cómo mejorar como trabajador", 
+        "Beneficios sugeridos"
     ]
     
-    # Agregar headers de familiares (6 máximo, 4 campos cada uno)
-    for i in range(1, 7):
+    # ========== AGREGAR HEADERS DE FAMILIARES (9 CAMPOS POR MIEMBRO) ==========
+    # Campos: Nombres, Edad, Parentezco, Estado Civil, Instrucción, Ocupación, Lugar trabajo/estudio, Ingresos, Teléfono
+    for i in range(1, 7):  # Máximo 6 miembros
         HEADERS.extend([
-            f"F{i}_Nombre",
+            f"F{i}_Nombres",
             f"F{i}_Edad",
-            f"F{i}_Parentesco",
-            f"F{i}_Ocupación",
-            f"F{i}_Ingreso"
+            f"F{i}_Parentezco",
+            f"F{i}_EstadoCivil",
+            f"F{i}_Instruccion",
+            f"F{i}_Ocupacion",
+            f"F{i}_LugarTrabajoEstudio",
+            f"F{i}_Ingresos",
+            f"F{i}_Telefono"
         ])
     
     # Crear archivo si no existe
@@ -143,8 +276,9 @@ def create_excel_file(data):
     # ========== CONSTRUIR FILA CON TODOS LOS DATOS ==========
     row = []
     
-    # 16. METADATOS
-    row.append(data.get("visit_date", datetime.now().strftime("%d/%m/%Y")))
+    # METADATOS
+    row.append(datetime.now().strftime("%d/%m/%Y %H:%M"))
+    row.append(data.get("visit_date", ""))
     
     # 1. DATOS PERSONALES
     row.append(data.get("ci", ""))
@@ -166,12 +300,12 @@ def create_excel_file(data):
     # 3. EDUCACIÓN
     row.append(data.get("educational_level", ""))
     row.append(data.get("educational_observations", ""))
-    row.append(data.get("currently_studying", ""))
+    row.append(checkbox_to_text(data.get("currently_studying")))
     row.append(data.get("study_career", ""))
     row.append(data.get("study_level", ""))
     
     # 4. DISCAPACIDAD
-    row.append(data.get("disability", ""))
+    row.append(checkbox_to_text(data.get("disability")))
     row.append(data.get("disability_type", ""))
     row.append(data.get("disability_percentage", ""))
     
@@ -182,15 +316,17 @@ def create_excel_file(data):
     row.append(data.get("house_ownership", ""))
     row.append(data.get("household_size", ""))
     row.append(data.get("time_living_sector", ""))
-    row.append(data.get("is_safe", ""))
-    row.append(data.get("house_valuation", ""))
+    row.append(checkbox_to_text(data.get("is_safe")))
+    row.append(format_money_excel(data.get("house_valuation")))
     row.append(data.get("house_observations", ""))
     
     # 6. DISTRIBUCIÓN VIVIENDA
-    distribution = data.get("house_distribution", [])
-    for item in ["dormitorio", "camas", "cocina", "comedor", "sala", 
-                 "baño", "patio", "jardín", "terraza", "garaje"]:
-        row.append("Sí" if item in distribution else "No")
+    distribution = data.get("house_distribution", {})
+    distribution_keys = ["dormitorio", "camas", "cocina", "comedor", "sala", 
+                         "baño", "patio", "jardín", "terraza", "garaje"]
+    for key in distribution_keys:
+        value = distribution.get(key, 0)
+        row.append(value if value > 0 else "No")
     
     # 7. MATERIALES
     row.append(data.get("roof_type", ""))
@@ -211,33 +347,38 @@ def create_excel_file(data):
     row.append(data.get("light_type", ""))
     row.append(data.get("sshh_type", ""))
     row.append(data.get("basic_services_other", ""))
-    row.append(data.get("hacinamiento", ""))
+    row.append(checkbox_to_text(data.get("hacinamiento")))
     row.append(data.get("waste_management", ""))
     row.append(data.get("transport_type", ""))
     row.append(data.get("transport_type_other", ""))
     row.append(data.get("appliances", ""))
-    row.append(data.get("internet", ""))
+    row.append(checkbox_to_text(data.get("internet")))
     row.append(data.get("internet_type", ""))
     
     # 9. ANIMALES
-    row.append(data.get("animals", ""))
+    row.append(checkbox_to_text(data.get("animals")))
     row.append(data.get("animal_type", ""))
     row.append(data.get("animal_quantity", ""))
-    row.append(data.get("peste", ""))
+    row.append(checkbox_to_text(data.get("peste")))
     row.append(data.get("animal_location", ""))
     row.append(data.get("animal_observations", ""))
     
     # 10. INFORMACIÓN FAMILIAR
     row.append(data.get("family_type", ""))
     row.append(data.get("children_count", ""))
-    row.append(data.get("children_outside_marriage", ""))
-    row.append(data.get("pays_alimony", ""))
+    row.append(checkbox_to_text(data.get("children_outside_marriage")))
+    row.append(checkbox_to_text(data.get("pays_alimony")))
     row.append(data.get("marriage_number", ""))
-    row.append(data.get("family_time", ""))
+    row.append(checkbox_to_text(data.get("family_time")))
     row.append(data.get("family_time_frequency", ""))
     row.append(data.get("family_activities", ""))
     row.append(data.get("other_activities", ""))
-    row.append(data.get("other_activities", ""))  # ¿Otras actividades?
+    # Para "Otras actividades domicilio" (checkbox)
+    other_activities_val = data.get("other_activities")
+    if isinstance(other_activities_val, bool) or other_activities_val in ["si", "no"]:
+        row.append(checkbox_to_text(other_activities_val))
+    else:
+        row.append(other_activities_val if other_activities_val else "")
     row.append(data.get("other_activities_specify", ""))
     row.append(data.get("hobbies", ""))
     row.append(data.get("hobbies_time", ""))
@@ -246,66 +387,65 @@ def create_excel_file(data):
     row.append(data.get("children_relationship", ""))
     row.append(data.get("children_relationship_reason", ""))
     row.append(data.get("family_problems", ""))
-    row.append(data.get("family_problems_help", ""))
-    row.append(data.get("family_migration", ""))
-    row.append(data.get("family_migration_received", ""))
+    row.append(checkbox_to_text(data.get("family_problems_help")))
+    row.append(checkbox_to_text(data.get("family_migration")))
+    row.append(checkbox_to_text(data.get("family_migration_received")))
     
     # 11. SITUACIÓN ECONÓMICA - APORTES
-    row.append(data.get("shared_expenses", ""))
-    row.append(data.get("father_contribution", ""))
-    row.append(data.get("mother_contribution", ""))
-    row.append(data.get("siblings_contribution", ""))
-    row.append(data.get("collaborators_contribution", ""))
-    row.append(data.get("spouse_contribution", ""))
-    row.append(data.get("children_contribution", ""))
-    row.append(data.get("other_contribution", ""))
-    row.append(data.get("total_contribution", ""))
-    row.append(data.get("debt_amount", ""))
-    row.append(data.get("formal_loans", ""))
-    row.append(data.get("formal_loans_amount", ""))
-    row.append(data.get("informal_loans", ""))
-    row.append(data.get("informal_loans_amount", ""))
-    row.append(data.get("informal_loans_family_amount", ""))
-    row.append(data.get("informal_loans_moneylender_amount", ""))
-    row.append(data.get("informal_loans_other_amount", ""))
-    row.append(data.get("credit_cards", ""))
+    row.append(checkbox_to_text(data.get("shared_expenses")))
+    row.append(format_money_excel(data.get("father_contribution")))
+    row.append(format_money_excel(data.get("mother_contribution")))
+    row.append(format_money_excel(data.get("siblings_contribution")))
+    row.append(format_money_excel(data.get("collaborators_contribution")))
+    row.append(format_money_excel(data.get("spouse_contribution")))
+    row.append(format_money_excel(data.get("children_contribution")))
+    row.append(format_money_excel(data.get("other_contribution")))
+    row.append(format_money_excel(data.get("total_contribution")))
+    row.append(format_money_excel(data.get("debt_amount")))
+    row.append(checkbox_to_text(data.get("formal_loans")))
+    row.append(format_money_excel(data.get("formal_loans_amount")))
+    row.append(checkbox_to_text(data.get("informal_loans")))
+    row.append(format_money_excel(data.get("informal_loans_family_amount")))
+    row.append(format_money_excel(data.get("informal_loans_moneylender_amount")))
+    row.append(format_money_excel(data.get("informal_loans_other_amount")))
+    row.append(checkbox_to_text(data.get("credit_cards")))
     
     # 12. GASTOS MENSUALES
-    row.append(data.get("food_support", ""))
-    row.append(data.get("education_support", ""))
-    row.append(data.get("housing_support", ""))
-    row.append(data.get("clothing_support", ""))
-    row.append(data.get("health_support", ""))
-    row.append(data.get("transport_support", ""))
-    row.append(data.get("basic_services_support", ""))
-    row.append(data.get("internet_support", ""))
-    row.append(data.get("cable_tv_support", ""))
-    row.append(data.get("cell_plan_support", ""))
-    row.append(data.get("loans_support", ""))
-    row.append(data.get("unsecured_loans_support", ""))
-    row.append(data.get("credit_cards_support", ""))
-    row.append(data.get("alimony_support", ""))
-    row.append(data.get("commercial_properties_support", ""))
-    row.append(data.get("financial_support_others", ""))
-    row.append(data.get("other_expenses_support", ""))
-    row.append(data.get("total_expenses", ""))
+    row.append(format_money_excel(data.get("food_support")))
+    row.append(format_money_excel(data.get("education_support")))
+    row.append(format_money_excel(data.get("housing_support")))
+    row.append(format_money_excel(data.get("clothing_support")))
+    row.append(format_money_excel(data.get("health_support")))
+    row.append(format_money_excel(data.get("transport_support")))
+    row.append(format_money_excel(data.get("basic_services_support")))
+    row.append(format_money_excel(data.get("internet_support")))
+    row.append(format_money_excel(data.get("cable_tv_support")))
+    row.append(format_money_excel(data.get("cell_plan_support")))
+    row.append(format_money_excel(data.get("loans_support")))
+    row.append(format_money_excel(data.get("unsecured_loans_support")))
+    row.append(format_money_excel(data.get("credit_cards_support")))
+    row.append(format_money_excel(data.get("alimony_support")))
+    row.append(format_money_excel(data.get("commercial_properties_support")))
+    row.append(format_money_excel(data.get("financial_support_others")))
+    row.append(format_money_excel(data.get("other_expenses_support")))
+    row.append(format_money_excel(data.get("total_expenses")))
     
     # 13. INGRESOS Y BALANCE
-    row.append(data.get("total_income", ""))
-    row.append(data.get("balance", ""))
-    row.append(data.get("transportation", ""))
+    row.append(format_money_excel(data.get("total_income")))
+    row.append(format_money_excel(data.get("balance")))
+    row.append(checkbox_to_text(data.get("transportation")))
     row.append(data.get("transportation_description", ""))
     row.append(data.get("additional_economic_activity", ""))
-    row.append(data.get("animal_breeding", ""))
+    row.append(checkbox_to_text(data.get("animal_breeding")))
     
     # 14. SALUD
-    row.append(data.get("sports", ""))
+    row.append(checkbox_to_text(data.get("sports")))
     row.append(data.get("sports_description", ""))
     row.append(data.get("sports_frequency", ""))
-    row.append(data.get("disease", ""))
-    row.append(data.get("family_health_problems", ""))
+    row.append(checkbox_to_text(data.get("disease")))
+    row.append(checkbox_to_text(data.get("family_health_problems")))
     row.append(data.get("family_health_problems_description", ""))
-    row.append(data.get("family_disability", ""))
+    row.append(checkbox_to_text(data.get("family_disability")))
     row.append(data.get("family_disability_type", ""))
     row.append(data.get("family_disability_percentage", ""))
     row.append(data.get("family_disability_relationship", ""))
@@ -324,34 +464,35 @@ def create_excel_file(data):
     row.append(data.get("job_manager_recognition", ""))
     row.append(data.get("job_recognition", ""))
     row.append(data.get("job_projection", ""))
-    row.append(data.get("job_discrimination", ""))
+    row.append(checkbox_to_text(data.get("job_discrimination")))
     row.append(data.get("job_improvement", ""))
     row.append(data.get("job_benefits", ""))
     
-    
-    
-    # ========== FAMILIARES (MÁXIMO 6) ==========
+    # ========== FAMILIARES (MÁXIMO 6 MIEMBROS - 9 CAMPOS CADA UNO) ==========
     family_members = data.get("family_members", [])
     
-    for i in range(6):
+    for i in range(6):  # Máximo 6 miembros
         if i < len(family_members):
             member = family_members[i]
             row.extend([
                 member.get("name", ""),
                 member.get("age", ""),
                 member.get("relation", ""),
+                member.get("marital_status", ""),
+                member.get("education", ""),
                 member.get("job", ""),
-                member.get("income", "")
+                member.get("work_or_study_place", ""),
+                format_money_excel(member.get("income", 0)),
+                member.get("phone", "")
             ])
         else:
             # Campos vacíos si no hay suficientes familiares
-            row.extend(["", "", "", "", ""])
+            row.extend(["", "", "", "", "", "", "", "", ""])
     
     # Verificar que la fila tenga la longitud correcta
     expected_length = len(HEADERS)
     if len(row) != expected_length:
         print(f"Advertencia: Longitud de fila ({len(row)}) no coincide con headers ({expected_length})")
-        # Ajustar longitud
         if len(row) < expected_length:
             row.extend([""] * (expected_length - len(row)))
         else:
@@ -360,13 +501,12 @@ def create_excel_file(data):
     # Agregar la fila al worksheet
     worksheet.append(row)
     
-    # Autoajustar anchos de columnas (solo si es nueva hoja o cada cierto tiempo)
-    for col_idx, header in enumerate(HEADERS, 1):
+    # Autoajustar anchos de columnas
+    for col_idx in range(1, len(HEADERS) + 1):
         column_letter = worksheet.cell(row=1, column=col_idx).column_letter
-        max_length = len(str(header))
+        max_length = len(str(HEADERS[col_idx - 1]))
         
-        # Revisar algunas filas para ajustar ancho
-        for row_idx in range(2, min(worksheet.max_row, 10)):
+        for row_idx in range(2, min(worksheet.max_row, 20)):
             cell_value = worksheet.cell(row=row_idx, column=col_idx).value
             if cell_value:
                 max_length = max(max_length, len(str(cell_value)))
@@ -391,7 +531,7 @@ def get_all_records():
     headers = [cell.value for cell in worksheet[1]]
     
     for row in worksheet.iter_rows(min_row=2, values_only=True):
-        if any(row):  # Si la fila no está vacía
+        if any(row):
             record = dict(zip(headers, row))
             records.append(record)
     
@@ -402,6 +542,6 @@ def get_record_by_ci(ci):
     """Busca un registro por cédula"""
     records = get_all_records()
     for record in records:
-        if record.get("CI") == ci:
+        if str(record.get("CI", "")) == str(ci):
             return record
     return None
