@@ -706,11 +706,11 @@ def economia(pdf, data):
     ], ["B", ""])
     
     # Tabla de aportes económicos
-    pdf.set_font("Arial", "B", 9)
-    pdf.cell(95, 8, "Personas que aportan economicamente", "B", 0, "L")
-    pdf.cell(95, 8, "Monto", "B", 1, "L")
+    pdf.set_font("Arial", "B", 8)
+    pdf.cell(95, 7, "Personas que aportan economicamente", "B", 0, "L")
+    pdf.cell(95, 7, "Monto", "B", 1, "L")
     
-    pdf.set_font("Arial", "", 9)
+    pdf.set_font("Arial", "", 8)
     aportes_data = [
         ("Padre:", data.get('father_contribution', 0)),
         ("Madre:", data.get('mother_contribution', 0)),
@@ -723,14 +723,14 @@ def economia(pdf, data):
     
     for persona, monto in aportes_data:
         monto_str = format_money(monto)
-        pdf.cell(95, 7, persona, 1, 0, "L")
-        pdf.cell(95, 7, monto_str, 1, 1, "R")
+        pdf.cell(95, 6, persona, 1, 0, "L")
+        pdf.cell(95, 6, monto_str, 1, 1, "R")
     
     total_contrib = data.get('total_contribution', 0)
     total_contrib_str = format_money(total_contrib)
-    pdf.set_font("Arial", "B", 9)
-    pdf.cell(95, 8, "TOTAL:", 1, 0, "L")
-    pdf.cell(95, 8, total_contrib_str, 1, 1, "R")
+    pdf.set_font("Arial", "B", 8)
+    pdf.cell(95, 7, "TOTAL:", 1, 0, "L")
+    pdf.cell(95, 7, total_contrib_str, 1, 1, "R")
     pdf.set_font("Arial", "", 10)
     
     deuda = data.get('debt_amount', 0)
@@ -782,12 +782,12 @@ def economia(pdf, data):
     ], ["B", ""])
     
     # Tabla de gastos
-    pdf.ln(3)
-    pdf.set_font("Arial", "B", 9)
-    pdf.cell(95, 8, "Gastos", "B", 0, "L")
-    pdf.cell(95, 8, "Monto", "B", 1, "L")
+    pdf.ln(2)
+    pdf.set_font("Arial", "B", 8)
+    pdf.cell(95, 7, "Gastos", "B", 0, "L")
+    pdf.cell(95, 7, "Monto", "B", 1, "L")
     
-    pdf.set_font("Arial", "", 8)
+    pdf.set_font("Arial", "", 7)
     gastos_data = [
         ("Alimentación:", data.get('food_support', 0)),
         ("Educación:", data.get('education_support', 0)),
@@ -810,14 +810,14 @@ def economia(pdf, data):
     
     for gasto, monto in gastos_data:
         monto_str = format_money(monto)
-        pdf.cell(95, 6, gasto, 1, 0, "L")
-        pdf.cell(95, 6, monto_str, 1, 1, "R")
+        pdf.cell(95, 5.5, gasto, 1, 0, "L")
+        pdf.cell(95, 5.5, monto_str, 1, 1, "R")
     
     total_exp = data.get('total_expenses', 0)
     total_exp_str = format_money(total_exp)
-    pdf.set_font("Arial", "B", 9)
-    pdf.cell(95, 8, "TOTAL GASTOS:", 1, 0, "L")
-    pdf.cell(95, 8, total_exp_str, 1, 1, "R")
+    pdf.set_font("Arial", "B", 8)
+    pdf.cell(95, 7, "TOTAL GASTOS:", 1, 0, "L")
+    pdf.cell(95, 7, total_exp_str, 1, 1, "R")
     pdf.set_font("Arial", "", 10)
     
     sitransporte = checkbox(data.get("transportation") == 'si')
@@ -857,16 +857,16 @@ def economia(pdf, data):
     balance = data.get('balance', 0)
     balance_str = format_money(balance)
     
-    # Resumen en una sola línea que no se sale de la hoja
+    # Primera fila: Ingresos y Egresos
     pdf.set_font("Arial", "B", 9)
-    # Ancho total: 190, dividido en 6 columnas de aproximadamente 31.6 cada una
-    pdf.cell(55, 8, "Ingresos:", 1, 0, "L")
-    pdf.cell(40, 8, total_income_str, 1, 0, "R")
-    pdf.cell(55, 8, "Egresos:", 1, 0, "L")
-    pdf.cell(40, 8, total_expenses_str, 1, 0, "R")
-    pdf.set_font("Arial", "B", 10)
-    pdf.cell(55, 8, "Saldo:", 1, 0, "L")
-    pdf.cell(40, 8, balance_str, 1, 1, "R")
+    pdf.cell(45, 8, "INGRESOS TOTALES:", 1, 0, "L")
+    pdf.cell(45, 8, total_income_str, 1, 0, "R")
+    pdf.cell(55, 8, "EGRESOS TOTALES:", 1, 0, "L")
+    pdf.cell(45, 8, total_expenses_str, 1, 1, "R")
+    
+    # Segunda fila: Saldo
+    pdf.cell(90, 8, "SALDO:", 1, 0, "L")
+    pdf.cell(100, 8, balance_str, 1, 1, "R")
     pdf.set_font("Arial", "", 10)
 
 def salud(pdf, data):
@@ -1053,7 +1053,7 @@ def firmas(pdf, data):
     pdf.ln(10)
 
     nombre_entrevistado = data.get("name", "")
-    nombre_trabajador_social = "Mgs. Ana Lucía Pérez"
+    nombre_trabajador_social = ""
 
     pdf.cell(90, 8, "_____________________________", 0, 0, "C")
     pdf.cell(10)
